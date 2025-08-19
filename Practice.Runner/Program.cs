@@ -19,31 +19,48 @@ class Program
 
             var choice = Menu.DisplayMenu();
 
+            var subChoice = string.Empty;
+
             switch (choice)
             {
-                case "Create New Session":
-                    await CreateNewSessionAsync();
+                case "Sessions":
+                    subChoice = Menu.DisplaySessionOptions();
+                    if(subChoice == "Create New Session")
+                    {
+                        await CreateNewSessionAsync();
+                    }
+                    else if (subChoice == "Finish Session")
+                    {
+                        await FinishSessionAsync();
+                    }
+                    else if (subChoice == "View All Sessions")
+                    {
+                        //await ListAllSessionsAsync();
+                        AnsiConsole.MarkupLine("[yellow]Feature not implemented yet.[/]");
+                    }
+                    //await CreateNewSessionAsync();
                     break;
-                case "Create New Song":
-                    await CreateNewSongAsync();
+                case "Songs":
+                    subChoice = Menu.DisplaySongOptions();
+                    //await CreateNewSongAsync();
                     break;
-                case "Create New Drill":
-                    await CreateNewDrillAsync();
+                case "Drills":
+                    subChoice = Menu.DisplayDrillOptions();
+                    //await CreateNewDrillAsync();
                     break;
-                case "List All Songs":
-                    await ListAllSongsAsync();
-                    break;
-
-                case "Generate Song":
-                    await GenSongJsonAsync();
-                    break;
-
                 case "Exit":
                     exitRequested = true;
                     AnsiConsole.MarkupLine("\n[green]Goodbye! Happy practicing![/]");
                     break;
             }
         }
+    }
+
+    private static async Task FinishSessionAsync()
+    {
+        // find the session to finish
+        // finishing the session
+        // Display the session results
     }
 
     private static async Task GenSongJsonAsync()

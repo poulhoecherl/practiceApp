@@ -33,11 +33,9 @@ class Menu
                 .Title("[green]═══ MAIN MENU ═══[/]")
                 .PageSize(10)
                 .AddChoices(new[] {
-                    "Create New Session",
-                    "Create New Song",
-                    "Create New Drill",
-                    "List All Songs",
-                    "Generate Song",
+                    "Sessions",
+                    "Songs",
+                    "Drills",
                     "Exit"
                 })
                 .UseConverter(choice => choice switch
@@ -45,13 +43,67 @@ class Menu
                     "Create New Session" => "🎵 Create New Session",
                     "Create New Song" => "🎶 Create New Song",
                     "Create New Drill" => "🎯 Create New Drill",
-                    "List All Songs" => "🎶 List All Songs",
-                    "Generate Song" => "🎶 Generate Song",
-                    "Exit" => "🚪 Exit",
+                    "Exit" => "Exit",
                     _ => choice
                 }));
 
         return choice;
     }
 
+    public static string DisplaySessionOptions()
+    {
+        var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .PageSize(10)
+                .AddChoices(new[] {
+                "Create New Session",
+                "View All Sessions"
+                })
+                .UseConverter(choice => choice switch
+                {
+                    "Create New Session" => "🎵 Create New Session",
+                    "View All Sessions" => "🎶 View All Sessions",
+                    _ => choice
+                }));
+
+        return choice;
+    }
+
+    public static string DisplaySongOptions()
+    {
+        var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .PageSize(10)
+                .AddChoices(new[] {
+            "Create New Song",
+            "View All Songs"
+                })
+                .UseConverter(choice => choice switch
+                {
+                    "Create New Song" => "🎵 Create New Song",
+                    "View All Songs" => "🎶 View All Songs",
+                    _ => choice
+                }));
+
+        return choice;
+    }
+
+    public static string DisplayDrillOptions()
+    {
+        var choice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .PageSize(10)
+                .AddChoices(new[] {
+        "Create New Drill",
+        "View All Drills"
+                })
+                .UseConverter(choice => choice switch
+                {
+                    "Create New Drill" => "🎵 Create New Drill",
+                    "View All Drills" => "🎶 View All Drills",
+                    _ => choice
+                }));
+
+        return choice;
+    }
 }
