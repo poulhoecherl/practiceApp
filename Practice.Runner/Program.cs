@@ -15,9 +15,9 @@ class Program
 
         while (!exitRequested)
         {
-            DisplayHeader();
+            Menu.DisplayHeader();
 
-            var choice = DisplayMenu();
+            var choice = Menu.DisplayMenu();
 
             switch (choice)
             {
@@ -127,21 +127,6 @@ class Program
             new() { Name = "Import Sessions", Action = () => AnsiConsole.WriteLine("Import Sessions") },
             new() { Name = "Back to Main Menu", Action = () => DisplayMenu() } // Go back to the main menu
         });
-
-    static void ShowSessionMenu()
-    {
-
-    }
-
-    static void ShowSongMenu()
-    {
-
-    }
-
-    static void ShowDrillMenu()
-    {
-
-    }
 
     static string DisplayMenu()
     {
