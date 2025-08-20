@@ -1,9 +1,13 @@
 using Practice.Data.Models;
 using Practice.Runner;
+using Practice.Services.DTOs;
+using Practice.Services.Profiles;
+using Practice.Services.Services;
 using Spectre.Console;
 
 class Program
 {
+    
     static async Task Main(string[] args)
     {
         await RunMenuAsync();
@@ -28,6 +32,7 @@ class Program
                     if(subChoice == "Create New Session")
                     {
                         await CreateNewSessionAsync();
+                        
                     }
                     else if (subChoice == "Finish Session")
                     {
@@ -35,8 +40,12 @@ class Program
                     }
                     else if (subChoice == "View All Sessions")
                     {
-                        //await ListAllSessionsAsync();
-                        AnsiConsole.MarkupLine("[yellow]Feature not implemented yet.[/]");
+                        DataService ds = new DataService();
+
+                        var sessions = await ds.GetSessions();
+
+                        await DisplaySessionsAsync();
+                        // AnsiConsole.MarkupLine("[yellow]Feature not implemented yet.[/]");
                     }
                     //await CreateNewSessionAsync();
                     break;
@@ -59,8 +68,12 @@ class Program
     private static async Task FinishSessionAsync()
     {
         // find the session to finish
-        // finishing the session
+        DataService ds = new DataService();
+
+        var lastSession = await ds.FinishLastSession();
+
         // Display the session results
+        await DisplaySessionAsync(lastSession);
     }
 
     private static async Task GenSongJsonAsync()
@@ -72,7 +85,6 @@ class Program
             Name = "All of Me",
             Artist = "John Legend",
             Genre = "Pop",
-            Duration = TimeSpan.FromMinutes(4.5)
         };
 
 
@@ -174,6 +186,56 @@ class Program
         return choice;
     }
 
+    static async Task DisplaySessionAsync(UpdateSessionDto session)
+    {
+        AnsiConsole.Clear();
+
+        // Create a table to display session information
+        var sessionTable = new Table()
+            .BorderColor(Color.Green)
+            .AddColumn("[bold]Start Time[/]")
+            .AddColumn("[bold]End Time[/]")
+            .AddColumn("[bold]Duration[/]");
+
+        sessionTable.AddRow($"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]"
+            , $"[cyan]{session.EndDate:yyyy-MM-dd HH:mm}[/]"
+            , $"[yellow]{(session.EndDate - session.StartDate).TotalMinutes} minutes[/]");
+        
+
+        AnsiConsole.Write(sessionTable);
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
+        Console.ReadKey();
+    }
+
+    static async Task DisplaySessionsAsync()
+    {
+        AnsiConsole.Clear();
+
+        var ds = new DataService();
+
+        var sessions = await ds.GetSessions();
+
+        // Create a table to display session information
+        var sessionTable = new Table()
+            .BorderColor(Color.Green)
+            .AddColumn("[bold]Start Time[/]")
+            .AddColumn("[bold]End Time[/]")
+            .AddColumn("[bold]Duration[/]");
+
+        foreach (var session in sessions)
+        {
+            sessionTable.AddRow($"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]"
+                , $"[cyan]{session.EndDate:yyyy-MM-dd HH:mm}[/]"
+                , $"[yellow]{(session.StartDate - session.EndDate).TotalMinutes} minutes[/]");
+        }
+
+        AnsiConsole.Write(sessionTable);
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
+        Console.ReadKey();
+    }
+
     static async Task CreateNewSessionAsync()
     {
         AnsiConsole.Clear();
@@ -186,6 +248,8 @@ class Program
         AnsiConsole.WriteLine();
 
         // Show progress for creating session
+        var session = new Session();
+
         await AnsiConsole.Progress()
             .StartAsync(async ctx =>
             {
@@ -193,26 +257,25 @@ class Program
 
                 while (!task.IsFinished)
                 {
-                    await Task.Delay(100);
-                    task.Increment(20);
+                    task.Increment(30);
+                    
+                    var ds = new DataService();
+                    task.Increment(60);
+                    
+                    await ds.AddSession(session);
+                    task.Increment(100);
+
+                    task.StopTask();
                 }
             });
-
-        var session = new Session
-        {
-            StartDate = DateTime.Now,
-            EndDate = DateTime.Now.AddHours(1) // Default 1 hour session
-        };
 
         // Create a table to display session information
         var sessionTable = new Table()
             .BorderColor(Color.Green)
             .AddColumn("[bold]Property[/]")
             .AddColumn("[bold]Value[/]")
-            .AddRow("Start Time", $"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]")
-            .AddRow("End Time", $"[cyan]{session.EndDate:yyyy-MM-dd HH:mm:ss}[/]")
-            .AddRow("Duration", $"[yellow]{(session.EndDate - session.StartDate).TotalMinutes} minutes[/]");
-
+            .AddRow("Start Time", $"[cyan]{session.StartDate:yyyy-MM-dd HH:mm}[/]");
+            
         AnsiConsole.Write(sessionTable);
         AnsiConsole.WriteLine();
 
@@ -326,7 +389,6 @@ class Program
         var drill = new Drill
         {
             Id = new Random().Next(1000, 9999), // Temporary ID for demo
-            DrillsId = 1, // Default collection ID
             StartDate = DateTime.Now,
             EndDate = DateTime.Now.AddMinutes(duration)
         };
@@ -338,7 +400,6 @@ class Program
             .AddColumn(new TableColumn("[bold]Value[/]").LeftAligned())
             .AddRow("Drill Name", $"[cyan]{drillName}[/]")
             .AddRow("Drill ID", $"[yellow]{drill.Id}[/]")
-            .AddRow("Collection ID", $"[yellow]{drill.DrillsId}[/]")
             .AddRow("Start Time", $"[cyan]{drill.StartDate:yyyy-MM-dd HH:mm:ss}[/]")
             .AddRow("End Time", $"[cyan]{drill.EndDate:yyyy-MM-dd HH:mm:ss}[/]")
             .AddRow("Duration", $"[magenta]{duration} minutes[/]");

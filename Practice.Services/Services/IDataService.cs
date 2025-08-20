@@ -1,19 +1,24 @@
 ﻿using Practice.Data.Models;
+using Practice.Services.DTOs;
 
 namespace Practice.Services.Services
 {
     public interface IDataService
     {
-        List<Song> GetSongs();
+        Task<List<Song>> GetSongs();
 
-        Song GetSong(string name);
+        Task<Song> GetSong(string name);
 
-        List<Session> GetSessions();
-        
-        Song GetSession(int id);
+        Task<List<SessionResponseDto>> GetSessions();
 
-        List<Drill> GetDrills();
+        Task<Session> GetSession(int id);
 
-        Drill GetDrill(int id);
+        Task AddSession(Session newSession);
+
+        Task DeleteSession(Session delSession);
+
+        Task<List<Drill>> GetDrills();
+
+        Task<Drill> GetDrill(int id);
     }
 }

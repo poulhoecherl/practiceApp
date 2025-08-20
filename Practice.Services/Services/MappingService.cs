@@ -17,10 +17,8 @@ namespace Practice.Services.Services
             return new DrillResponseDto
             {
                 Id = entity.Id,
-                DrillsId = entity.DrillsId,
                 StartDate = entity.StartDate,
-                EndDate = entity.EndDate,
-                Drills = entity.Drills != null ? new DrillMinimalDto { Id = entity.Drills.Id } : new DrillMinimalDto()
+                EndDate = entity.EndDate
             };
         }
         
@@ -43,7 +41,6 @@ namespace Practice.Services.Services
             return new DrillSearchDto
             {
                 Id = entity.Id,
-                DrillsId = entity.DrillsId,
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate
             };
@@ -66,7 +63,6 @@ namespace Practice.Services.Services
 
             return new Drill
             {
-                DrillsId = dto.DrillsId,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
             };
@@ -77,7 +73,6 @@ namespace Practice.Services.Services
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            entity.DrillsId = dto.DrillsId;
             entity.StartDate = dto.StartDate;
             entity.EndDate = dto.EndDate;
         }
@@ -198,8 +193,7 @@ namespace Practice.Services.Services
             return new SongResponseDto
             {
                 Id = entity.Id,
-                SongsId = entity.SongsId,
-                Songs = entity.Songs != null ? new SongMinimalDto { Id = entity.Songs.Id } : new SongMinimalDto()
+                SongsId = entity.SongsId
             };
         }
 
@@ -329,10 +323,8 @@ namespace Practice.Services.Services
             return query.Select(entity => new DrillResponseDto
             {
                 Id = entity.Id,
-                DrillsId = entity.DrillsId,
                 StartDate = entity.StartDate,
-                EndDate = entity.EndDate,
-                Drills = entity.Drills != null ? new DrillMinimalDto { Id = entity.Drills.Id } : new DrillMinimalDto()
+                EndDate = entity.EndDate
             });
         }
 
@@ -370,8 +362,7 @@ namespace Practice.Services.Services
             return query.Select(entity => new SongResponseDto
             {
                 Id = entity.Id,
-                SongsId = entity.SongsId,
-                Songs = entity.Songs != null ? new SongMinimalDto { Id = entity.Songs.Id } : new SongMinimalDto()
+                SongsId = entity.SongsId
             });
         }
 

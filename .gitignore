@@ -12,3 +12,5 @@
 /Practice.Services/bin/Debug/net9.0
 /Practice.Data/bin/Debug/net9.0
 /Practice.Data/obj
+/Practice.Data/JSON
+/Practice.Data/Migrations

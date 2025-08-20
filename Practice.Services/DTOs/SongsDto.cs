@@ -24,7 +24,6 @@ namespace Practice.Services.DTOs
 
         public string Name { get; set; }
 
-        public SongMinimalDto Songs { get; set; } = null!;
     }
 
     public class SongMinimalDto

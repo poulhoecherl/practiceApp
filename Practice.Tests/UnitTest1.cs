@@ -29,8 +29,6 @@ public class MappingServiceTests
             Name = "Test Song",
             Artist = "Test Artist",
             Genre = "Rock",
-            Duration = TimeSpan.FromMinutes(3),
-            Songs = new Songs { Id = 2 }
         };
 
         // Act
@@ -41,8 +39,6 @@ public class MappingServiceTests
         Assert.Equal(1, result.Id);
         Assert.Equal(2, result.SongsId);
         Assert.Equal("Test Song", result.Name);
-        Assert.NotNull(result.Songs);
-        Assert.Equal(2, result.Songs.Id);
     }
 
     [Fact]

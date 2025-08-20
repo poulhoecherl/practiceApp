@@ -57,11 +57,13 @@ class Menu
                 .PageSize(10)
                 .AddChoices(new[] {
                 "Create New Session",
+                "Finish a Session",
                 "View All Sessions"
                 })
                 .UseConverter(choice => choice switch
                 {
                     "Create New Session" => "🎵 Create New Session",
+                    "Finish Session" => "🎵 Finish Session",
                     "View All Sessions" => "🎶 View All Sessions",
                     _ => choice
                 }));
