@@ -63,7 +63,7 @@ class Menu
                 .UseConverter(choice => choice switch
                 {
                     "Create New Session" => "🎵 Create New Session",
-                    "Finish Session" => "🎵 Finish Session",
+                    "Finish a Session" => "🎵 Finish a Session",
                     "View All Sessions" => "🎶 View All Sessions",
                     _ => choice
                 }));

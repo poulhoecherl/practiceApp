@@ -1,4 +1,4 @@
-using System;
+using Humanizer;
 using System.ComponentModel.DataAnnotations;
 
 namespace Practice.Services.DTOs
@@ -25,6 +25,17 @@ namespace Practice.Services.DTOs
         public int Id { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+
+        public bool IsComplete => EndDate == new DateTime(1901,1,1);
+
+        public string Duration
+        {
+            get
+            {
+                TimeSpan ts = EndDate - StartDate;
+                return ts.Humanize(2); // This will now work with the Humanizer library
+            }
+        }
     }
 
     public class SessionListDto

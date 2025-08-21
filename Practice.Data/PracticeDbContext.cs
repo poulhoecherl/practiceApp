@@ -19,8 +19,9 @@ namespace Practice.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            var dbPath = @"D:\\Source\\practiceApp\\practice.db";
             // Set the database provider and connection string
-            optionsBuilder.UseSqlite("Data Source=practice.db");
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

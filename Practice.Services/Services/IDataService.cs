@@ -11,11 +11,13 @@ namespace Practice.Services.Services
 
         Task<List<SessionResponseDto>> GetSessions();
 
-        Task<Session> GetSession(int id);
+        Task<SessionResponseDto> GetSession(int id);
 
         Task AddSession(Session newSession);
 
         Task DeleteSession(Session delSession);
+
+        Task<UpdateSessionDto> FinishSession(int SessionId);
 
         Task<List<Drill>> GetDrills();
 

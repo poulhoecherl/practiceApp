@@ -16,10 +16,6 @@ namespace Practice.Services.Services
 
         private string dbName = "practice.db";
 
-        // Add a private readonly IMapper field to the DataService class
-        private readonly IMapper mapper;
-
-        // Modify the constructor to accept IMapper
         public DataService()
         {
             // Initialize the database path
@@ -47,16 +43,61 @@ namespace Practice.Services.Services
             throw new NotImplementedException();
         }
 
-        public async Task<Session> GetSession(int id)
+        public async Task<SessionResponseDto> GetSession(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                using var context = new PracticeDbContext();
+                
+                var session = await context.Sessions.Where(m => m.Id == id).SingleOrDefaultAsync();
+                if (session != null)
+                {
+
+                    var retVal = new SessionResponseDto()
+                    {
+                        Id = session.Id,
+                        StartDate = session.StartDate,
+                        EndDate = session.EndDate
+                    };
+
+                    return retVal;
+                }
+
+                return new SessionResponseDto();
+            }
+            catch
+            {
+
+                throw;
+            }
         }
 
         public async Task<List<SessionResponseDto>> GetSessions()
         {
             using (var context = new PracticeDbContext())
             {
-                var sessions = context.Sessions.ToList();
+                var sessions = await context.Sessions.ToListAsync();
+                var retVal = sessions.Select(s => new SessionResponseDto()
+                {
+                    Id = s.Id,
+                    StartDate = s.StartDate,
+                    EndDate = s.EndDate
+                }).ToList();
+
+                return retVal;
+            }
+        }
+
+        public async Task<List<SessionResponseDto>> GetOpenSessions()
+        {
+            using (var context = new PracticeDbContext())
+            {
+                var sessions = await context.Sessions.Where(m => m.EndDate == new DateTime(1901,1,1)).ToListAsync();
+                if(sessions.Count != 0 == false)
+                {
+                    return [];
+                }
+
                 var retVal = sessions.Select(s => new SessionResponseDto()
                 {
                     Id = s.Id,
@@ -112,29 +153,27 @@ namespace Practice.Services.Services
             throw new NotImplementedException();
         }
 
-        public async Task<UpdateSessionDto> FinishLastSession()
+        public async Task<UpdateSessionDto> FinishSession(int SessionId)
         {
             try
             {
                 using var context = new PracticeDbContext();
 
-                var sessions = await GetSessions();
+                // finishing the session
+                var sesh = await context.Sessions
+                    .Where(s => s.Id == SessionId)
+                    .ExecuteUpdateAsync(s => s.SetProperty(e => e.EndDate, DateTime.Now));
+                    
+                await context.SaveChangesAsync();
 
-                var emptySession = sessions.Where(m => m.EndDate == new DateTime(1901, 1, 1)).OrderByDescending(m => m.Id).Take(1).SingleOrDefault();
-                if (emptySession != null)
+                var session = await GetSession(SessionId);
+
+                return new UpdateSessionDto()
                 {
-                    // finishing the session
-                    emptySession.EndDate = DateTime.Now;
-                    await context.SaveChangesAsync();
-
-                    return new UpdateSessionDto()
-                    {
-                        Id = emptySession.Id,
-                        EndDate = emptySession.EndDate,
-                        StartDate = emptySession.StartDate
-                    };
-                }
-                return new UpdateSessionDto();
+                    Id = session.Id,
+                    EndDate = session.EndDate,
+                    StartDate = session.StartDate
+                };
             }
             catch
             {
