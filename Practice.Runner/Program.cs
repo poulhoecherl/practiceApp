@@ -47,12 +47,6 @@ class Program
                         var selectedOption = AnsiConsole.Prompt(sessionMenu);
 
                         selectedOption.Action?.Invoke();
-
-                        //AnsiConsole.WriteLine();
-                        
-                        //AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
-                        
-                        //Console.ReadKey();
                     }
                     else if (subChoice.Contains("View"))
                     {
