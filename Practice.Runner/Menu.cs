@@ -7,22 +7,25 @@ class Menu
     {
         AnsiConsole.Clear();
 
-        // Create a fancy panel for the app title
-        var titlePanel = new Panel("[bold cyan]PRACTICE APP[/]")
-            .Header("[yellow]♪ Music Practice Management ♪[/]") // Corrected method name
-            .BorderColor(Color.Cyan1)
-            .Padding(1, 0);
-
-        AnsiConsole.Write(titlePanel);
-        AnsiConsole.WriteLine();
-
         // Display current time with styling
         var timeTable = new Table()
             .BorderColor(Color.Yellow)
-            .AddColumn(new TableColumn("[yellow]Current Time[/]").Centered())
-            .AddRow($"[bold]{DateTime.Now:dddd, MMMM dd, yyyy - hh:mm:ss tt}[/]");
+            .AddColumn(new TableColumn("[yellow]Main Menu[/]").Centered());
 
         AnsiConsole.Write(timeTable);
+        AnsiConsole.WriteLine();
+    }
+
+    public static void DisplayHeader(string title)
+    {
+        AnsiConsole.Clear();
+
+        // Display current time with styling
+        var displayTable = new Table()
+            .BorderColor(Color.Yellow)
+            .AddColumn(new TableColumn($"[yellow]{title}[/]").Centered());
+
+        AnsiConsole.Write(displayTable);
         AnsiConsole.WriteLine();
     }
 
@@ -30,7 +33,6 @@ class Menu
     {
         var choice = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
-                .Title("[green]═══ MAIN MENU ═══[/]")
                 .PageSize(10)
                 .AddChoices(new[] {
                     "Sessions",

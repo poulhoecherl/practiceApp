@@ -6,6 +6,7 @@ using Practice.Services.Profiles;
 using Practice.Services.Services;
 using Spectre.Console;
 using System;
+using static System.Collections.Specialized.BitVector32;
 
 class Program
 {
@@ -41,9 +42,17 @@ class Program
                     {
                         var sessionMenu = await GetOpenSessionListMenuAsync();
 
+                        Menu.DisplayHeader("Finish Session");
+
                         var selectedOption = AnsiConsole.Prompt(sessionMenu);
 
                         selectedOption.Action?.Invoke();
+
+                        //AnsiConsole.WriteLine();
+                        
+                        //AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
+                        
+                        //Console.ReadKey();
                     }
                     else if (subChoice.Contains("View"))
                     {
@@ -77,9 +86,11 @@ class Program
         // Complete the session based on the ID passed
         var lastSession = await _dataService.FinishSession(sessionId);
 
-        AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
-        Console.ReadKey();
+    }
+
+    private static async Task HandleReturnToMainMenuAction()
+    {
+        // nothing
     }
 
     private static async Task<SelectionPrompt<MenuItem>> GetOpenSessionListMenuAsync()
@@ -88,7 +99,7 @@ class Program
         
         List<MenuItem> sessionMenuList = new List<MenuItem>();
 
-        var sessionItems = await _dataService.GetSessions();
+        var sessionItems = await _dataService.GetOpenSessions();
         foreach(var session in sessionItems)
         {
             // AnsiConsole.WriteLine($"Session ID: {session.Id}, Start Date: {session.StartDate}, End Date: {session.EndDate}");
@@ -98,6 +109,12 @@ class Program
                 Action = () => { _ = HandleSessionMenuAction(session.Id); }
             });
         }
+
+        sessionMenuList.Add(new MenuItem
+        {
+            Name = $"Close",
+            Action = () => { _ = HandleReturnToMainMenuAction(); }
+        });
 
         var sessionMenu = new SelectionPrompt<MenuItem>()
             .Title("Select a session to finish:")
@@ -109,6 +126,8 @@ class Program
     static async Task DisplaySessionsAsync()
     {
         AnsiConsole.Clear();
+
+        Menu.DisplayHeader("Sessions");
 
         var ds = new DataService();
 
