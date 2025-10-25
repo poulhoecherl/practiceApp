@@ -28,10 +28,10 @@ class Program
             {
                 case "Sessions":
                     subChoice = Menu.DisplaySessionOptions();
-                    if(subChoice.Contains("Create"))
+                    if (subChoice.Contains("Create"))
                     {
                         await CreateNewSessionAsync();
-                        
+
                     }
                     else if (subChoice.Contains("Finish"))
                     {
@@ -51,7 +51,10 @@ class Program
 
                         await DisplaySessionsAsync();
                     }
-                    //await CreateNewSessionAsync();
+                    else if (subChoice.Contains("Import"))
+                    {
+                        var importSessions = await ImportSessionsAsync();
+                    }
                     break;
                 case "Songs":
                     subChoice = Menu.DisplaySongOptions();
@@ -71,7 +74,7 @@ class Program
 
     private static async Task HandleSessionMenuAction(int sessionId)
     {
-        
+
         // Complete the session based on the ID passed
         var lastSession = await _dataService.FinishSession(sessionId);
 
@@ -85,11 +88,11 @@ class Program
     private static async Task<SelectionPrompt<MenuItem>> GetOpenSessionListMenuAsync()
     {
         // find the session to finish
-        
+
         List<MenuItem> sessionMenuList = new List<MenuItem>();
 
         var sessionItems = await _dataService.GetOpenSessions();
-        foreach(var session in sessionItems)
+        foreach (var session in sessionItems)
         {
             // AnsiConsole.WriteLine($"Session ID: {session.Id}, Start Date: {session.StartDate}, End Date: {session.EndDate}");
             sessionMenuList.Add(new MenuItem
@@ -178,7 +181,7 @@ class Program
                     var ds = new DataService();
 
                     await ds.AddSession(session);
-                    
+
                     task.Increment(100);
 
                     task.StopTask();
@@ -191,7 +194,7 @@ class Program
             .AddColumn("[bold]Property[/]")
             .AddColumn("[bold]Value[/]")
             .AddRow("Start Time", $"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]");
-            
+
         AnsiConsole.Write(sessionTable);
         AnsiConsole.WriteLine();
 
@@ -201,4 +204,23 @@ class Program
         Console.ReadKey();
     }
 
+    private static async Task<List<Session>> ImportSessionsAsync()
+    {
+        AnsiConsole.Clear();
+        Menu.DisplayHeader("Import Sessions");
+
+        // Simulate importing sessions
+        var importedSessions = new List<Session>
+        {
+            new Session { Id = 1, StartDate = DateTime.Now.AddHours(-2), EndDate = DateTime.Now },
+            new Session { Id = 2, StartDate = DateTime.Now.AddHours(-4), EndDate = DateTime.Now.AddHours(-2) }
+        };
+
+        AnsiConsole.MarkupLine("[green]✓ Sessions imported successfully![/]");
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
+        Console.ReadKey();
+
+        return importedSessions;
+    }
 }

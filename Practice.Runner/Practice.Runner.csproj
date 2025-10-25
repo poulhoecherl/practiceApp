@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EPPlus" Version="8.2.1" />
     <PackageReference Include="Humanizer" Version="2.14.1" />
     <PackageReference Include="NameParserSharp" Version="1.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -16,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Practice.Services\Practice.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
