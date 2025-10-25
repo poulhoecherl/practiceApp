@@ -6,16 +6,57 @@ using Practice.Data.Models;
 using Practice.Services.DTOs;
 using Practice.Services.Services;
 using Practice.Services.Interfaces;
+using System.Text;
+using System.Diagnostics;
 
 namespace Practice.Tests;
 
 public class MappingServiceTests
 {
     private readonly IMappingService _mappingService;
+    private readonly IExcelService _excelService;
 
     public MappingServiceTests()
     {
         _mappingService = new MappingService();
+        _excelService = new ExcelService();
+    }
+
+    [Fact]
+    public async Task ImportPracticeLogFromExcel()
+    {
+        string excelPath = @"C:\temp\PianoPracticeLog.xlsx";
+
+        StringBuilder csv = new();
+
+        var sheetNames = await _excelService.GetWorksheetNamesAsync(excelPath);
+
+        List<PracticeLog> practiceLogList = new();
+
+        DateTime emptyDate = new DateTime(1, 1, 1);
+
+        foreach (var sheet in sheetNames)
+        {
+            if (!sheet.Contains("Sheet"))
+            {
+                var logs = await _excelService.ConvertXlsxToPracticeLogColAsync(excelPath, sheet);
+
+                if(logs != null)
+                {
+                    var logsx = logs.Where(m => m.PracticeDate.Date != emptyDate.Date);
+                    practiceLogList.AddRange(logsx);
+                }
+            }
+        }
+        
+        Assert.NotNull(practiceLogList);
+
+        Debug.WriteLine($"Imported {practiceLogList.Count} practice logs from Excel.");
+
+        foreach(var pl in practiceLogList)
+        {
+            Debug.WriteLine($"{pl.ToString()}");
+        }
     }
 
     [Fact]
