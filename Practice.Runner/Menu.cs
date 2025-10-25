@@ -60,13 +60,17 @@ class Menu
                 .AddChoices(new[] {
                 "Create New Session",
                 "Finish a Session",
-                "View All Sessions"
+                "View All Sessions",
+                "Import Sessions",
+                "Back to Main Menu",
                 })
                 .UseConverter(choice => choice switch
                 {
                     "Create New Session" => "🎵 Create New Session",
                     "Finish a Session" => "🎵 Finish a Session",
                     "View All Sessions" => "🎶 View All Sessions",
+                    "Import Sessions" => "🎵 Import Sessions",
+                    "Back to Main Menu" => "🔙 Back to Main Menu",
                     _ => choice
                 }));
 

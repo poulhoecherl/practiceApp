@@ -1,12 +1,7 @@
-using Humanizer;
 using Practice.Data.Models;
 using Practice.Runner;
-using Practice.Services.DTOs;
-using Practice.Services.Profiles;
 using Practice.Services.Services;
 using Spectre.Console;
-using System;
-using static System.Collections.Specialized.BitVector32;
 
 class Program
 {
