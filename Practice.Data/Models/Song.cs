@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace Practice.Data.Models
 {
@@ -6,13 +7,16 @@ namespace Practice.Data.Models
     {
         public int Id { get; set; }
         
-        public int SongsId { get; set; }
-
+        [Required]
+        [MaxLength(200)]
         public string Name { get; set; } = string.Empty;
         
-        public string? Artist { get; set; } = string.Empty;
+        [MaxLength(200)]
+        public string? Artist { get; set; }
         
-        public string? Genre { get; set; } = "jazz";
-
+        [MaxLength(100)]
+        public string? Genre { get; set; } = "Unknown";
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

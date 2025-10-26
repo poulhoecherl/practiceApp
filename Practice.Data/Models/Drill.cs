@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace Practice.Data.Models
 {
@@ -10,9 +7,21 @@ namespace Practice.Data.Models
     {
         public int Id { get; set; }
         
-        public DateTime StartDate { get; set; }
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
         
-        public DateTime EndDate { get; set; }
+        [MaxLength(1000)]
+        public string? Description { get; set; }
         
+        /// <summary>
+        /// Duration in minutes
+        /// </summary>
+        public int DurationMinutes { get; set; }
+        
+        [MaxLength(100)]
+        public string? Category { get; set; }
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

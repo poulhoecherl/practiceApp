@@ -1,34 +1,22 @@
-﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Practice.Data.Models
+namespace Practice.Services.DTOs
 {
-    public class Session
+    public class SessionDto
     {
         public int Id { get; set; }
-
         public int UserId { get; set; } = 1;
-
-        [Required]
         public DateTime PracticeDate { get; set; }
-
         public DateTime? StartTime { get; set; }
-
         public DateTime? EndTime { get; set; }
-
-        [MaxLength(500)]
         public string? Activity { get; set; }
-
-        /// <summary>
-        /// Duration in minutes
-        /// </summary>
         public int DurationMinutes { get; set; }
-
-        [MaxLength(2000)]
         public string? Notes { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public DateTime? UpdatedAt { get; set; }
+        
+        public override string ToString()
+        {
+            return $"{PracticeDate:yyyy-MM-dd} - {Activity} - {DurationMinutes} mins - Notes: {Notes}";
+        }
     }
+
 }

@@ -8,10 +8,10 @@ namespace Practice.Services.Configuration
     {
         public static void AddPracticeServices(this IServiceCollection services)
         {
-            services.AddScoped<IMappingService, MappingService>();
-            services.AddScoped<ISongService, SongService>();
-            services.AddScoped<ISongsService, SongsService>();
-            services.AddScoped<ISessionService, SessionService>();
+            //services.AddScoped<IMappingService, MappingService>();
+            //services.AddScoped<ISongService, SongService>();
+            //services.AddScoped<ISongsService, SongsService>();
+            //services.AddScoped<ISessionService, SessionService>();
             // Add more services here if needed
         }
     }

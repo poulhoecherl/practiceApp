@@ -1,12 +1,8 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Practice.Data;
 using Practice.Data.Models;
 using Practice.Services.DTOs;
-using Practice.Services.Profiles;
-using System.Collections.Generic;
+using Practice.Services.Interfaces;
 
 namespace Practice.Services.Services
 {
@@ -56,8 +52,7 @@ namespace Practice.Services.Services
                     var retVal = new SessionResponseDto()
                     {
                         Id = session.Id,
-                        StartDate = session.StartDate,
-                        EndDate = session.EndDate
+                        
                     };
 
                     return retVal;
@@ -80,8 +75,7 @@ namespace Practice.Services.Services
                 var retVal = sessions.Select(s => new SessionResponseDto()
                 {
                     Id = s.Id,
-                    StartDate = s.StartDate,
-                    EndDate = s.EndDate
+                    
                 }).ToList();
 
                 return retVal;
@@ -92,7 +86,7 @@ namespace Practice.Services.Services
         {
             using (var context = new PracticeDbContext())
             {
-                var sessions = await context.Sessions.Where(m => m.EndDate == new DateTime(1901,1,1)).ToListAsync();
+                var sessions = await context.Sessions.Where(m => m.StartTime == new DateTime(1901,1,1)).ToListAsync();
                 if(sessions.Count != 0 == false)
                 {
                     return [];
@@ -101,8 +95,7 @@ namespace Practice.Services.Services
                 var retVal = sessions.Select(s => new SessionResponseDto()
                 {
                     Id = s.Id,
-                    StartDate = s.StartDate,
-                    EndDate = s.EndDate
+                    
                 }).ToList();
 
                 return retVal;
@@ -160,9 +153,8 @@ namespace Practice.Services.Services
                 using var context = new PracticeDbContext();
 
                 // finishing the session
-                var sesh = await context.Sessions
-                    .Where(s => s.Id == SessionId)
-                    .ExecuteUpdateAsync(s => s.SetProperty(e => e.EndDate, DateTime.Now));
+                var sesh = context.Sessions.Where(s => s.Id == SessionId);
+                    //.ExecuteUpdateAsync(s => s.SetProperty(e => e.DurationMinutes, DateTime.Now));
                     
                 await context.SaveChangesAsync();
 

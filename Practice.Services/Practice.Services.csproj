@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -20,7 +20,14 @@
     <None Remove="Examples\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="DTOs\DrillDtos.cs" />
+    <Compile Remove="DTOs\SongsDto.cs" />
+    <Compile Remove="Interfaces\ISongService.cs" />
+    <Compile Remove="Interfaces\ISongsService.cs" />
     <Compile Remove="Services\IExcelService.cs" />
+    <Compile Remove="Services\MappingService.cs" />
+    <Compile Remove="Services\SongService.cs" />
+    <Compile Remove="Services\SongsService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
