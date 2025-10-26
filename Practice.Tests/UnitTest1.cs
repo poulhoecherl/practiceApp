@@ -8,6 +8,7 @@ using Practice.Services.Services;
 using Practice.Services.Interfaces;
 using System.Text;
 using System.Diagnostics;
+using Practice.Data.Views;
 
 namespace Practice.Tests;
 
@@ -31,7 +32,7 @@ public class MappingServiceTests
 
         var sheetNames = await _excelService.GetWorksheetNamesAsync(excelPath);
 
-        List<PracticeLog> practiceLogList = new();
+        List<SessionDto> practiceLogList = new();
 
         DateTime emptyDate = new DateTime(1, 1, 1);
 
@@ -39,7 +40,7 @@ public class MappingServiceTests
         {
             if (!sheet.Contains("Sheet"))
             {
-                var logs = await _excelService.ConvertXlsxToPracticeLogColAsync(excelPath, sheet);
+                var logs = await _excelService.ConvertXlsxToSessionDtoColAsync(excelPath, sheet);
 
                 if(logs != null)
                 {
@@ -51,12 +52,14 @@ public class MappingServiceTests
         
         Assert.NotNull(practiceLogList);
 
-        Debug.WriteLine($"Imported {practiceLogList.Count} practice logs from Excel.");
-
         foreach(var pl in practiceLogList)
         {
-            Debug.WriteLine($"{pl.ToString()}");
+            //Debug.WriteLine($"{pl.ToString()}");
+            // Insert into Sessions table
+
         }
+
+        Debug.WriteLine($"Imported {practiceLogList.Count} practice logs from Excel.");
     }
 
     [Fact]
