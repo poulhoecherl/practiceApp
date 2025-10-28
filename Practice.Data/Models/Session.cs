@@ -1,38 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Practice.Data.Models
 {
-    public class Session
+    public class Session : IAuditableEntity
     {
-        private DateTime defaultDateTime = new DateTime(1901, 1, 1, 0, 0, 0);
-
-        public Session()
-        {
-            StartDate = DateTime.Now;
-        }
-
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public DateTime StartDate { get; set; } = new DateTime(1901, 1, 1, 0, 0, 0);
+        [Required]
+        public int UserId { get; set; } = 1;
 
-        public DateTime EndDate { get; set; } = new DateTime(1901, 1, 1, 0, 0, 0);
+        [Required]
+        public DateTime PracticeDate { get; set; }
+        
+        [Required]
+        public DateTime? StartTime { get; set; }
 
-        public string Duration 
-        { 
-            get 
-            {
-                if (EndDate == defaultDateTime || StartDate == defaultDateTime)
-                {
-                    return "00:00:00";
-                }
+        public DateTime? EndTime { get; set; }
 
-                TimeSpan duration = EndDate - StartDate; 
-                return duration.ToString(@"hh\:mm\:ss"); 
-            }
-        }
+        [MaxLength(500)]
+        [Required]
+        public string? Activity { get; set; }
+
+        /// <summary>
+        /// Duration in minutes
+        /// </summary>
+        public int DurationMinutes { get; set; }
+
+        [MaxLength(2000)]
+        public string? Notes { get; set; }
+
+        [Required]
+        public DateTime RowCreatedOn { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public string RowCreatedBy { get; set; } = string.Empty;
+
+        public DateTime? RowModifiedOn { get; set; }
+
+        public string? RowModifiedBy { get; set; }
     }
 }

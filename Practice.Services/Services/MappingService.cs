@@ -150,7 +150,7 @@ namespace Practice.Services.Services
             return new SessionListDto
             {
                 Id = entity.Id,
-                StartDate = entity.StartDate
+                
             };
         }
 
@@ -161,7 +161,7 @@ namespace Practice.Services.Services
             return new SessionSummaryDto
             {
                 Id = entity.Id,
-                DurationMinutes = (int)(entity.EndDate - entity.StartDate).TotalMinutes
+                
             };
         }
 
@@ -171,8 +171,7 @@ namespace Practice.Services.Services
 
             return new Session
             {
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
+                
             };
         }
 
@@ -181,8 +180,7 @@ namespace Practice.Services.Services
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            entity.StartDate = dto.StartDate;
-            entity.EndDate = dto.EndDate;
+            
         }
 
         // Song mappings

@@ -1,11 +1,7 @@
 using OfficeOpenXml;
-using Practice.Data.Views;
-using System;
-using System.Collections.Generic;
+using Practice.Services.DTOs;
+using Practice.Services.Interfaces;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace Practice.Services.Services
 {
@@ -113,7 +109,7 @@ namespace Practice.Services.Services
 
                     plog.PracticeDate = practiceDate;
 
-                    plog.Duration = double.Parse(cell3.ToString());
+                    plog.DurationMinutes = int.Parse(cell3.ToString());
 
                     plog.Activity = cell4.ToString();
 

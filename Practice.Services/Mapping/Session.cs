@@ -1,10 +1,5 @@
 ﻿using Practice.Data.Models;
-using Practice.Data.Views;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Practice.Services.DTOs;
 
 namespace Practice.Services.Mapping
 {
@@ -17,10 +12,10 @@ namespace Practice.Services.Mapping
             return new Session
             {
                 UserId = dto.UserId,
-                StartDate = dto.PracticeDate,
-                EndDate = dto.PracticeDate.AddMinutes(dto.Duration), // Assuming duration is practice time
+                PracticeDate = dto.PracticeDate,
+                
                 Activity = dto.Activity,
-                Duration = dto.Duration,
+                
                 Notes = dto.Notes
             };
         }
@@ -32,9 +27,8 @@ namespace Practice.Services.Mapping
             return new SessionDto()
             {
                 UserId = entity.UserId,
-                PracticeDate = entity.StartDate,
+                PracticeDate = entity.PracticeDate,
                 Activity = entity.Activity,
-                Duration = entity.Duration,
                 Notes = entity.Notes
             };
 

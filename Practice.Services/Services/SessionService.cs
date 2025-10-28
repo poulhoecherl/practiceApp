@@ -120,8 +120,8 @@ namespace Practice.Services.Services
             // Create a new session entity directly for more control
             var session = new Session
             {
-                StartDate = now,
-                EndDate = now.AddYears(10) // Far future date to indicate "active" session
+                PracticeDate = now,
+                
             };
 
             var createdSession = await _unitOfWork.Sessions.CreateAsync(session);
@@ -144,7 +144,6 @@ namespace Practice.Services.Services
             }
 
             // Update the end time to now
-            currentSession.EndDate = DateTime.UtcNow;
             
             var updatedSession = await _unitOfWork.Sessions.UpdateAsync(currentSession);
             await _unitOfWork.SaveChangesAsync();

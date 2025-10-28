@@ -1,7 +1,7 @@
 ﻿using Practice.Data.Models;
 using Practice.Services.DTOs;
 
-namespace Practice.Services.Services
+namespace Practice.Services.Interfaces
 {
     public interface IDataService
     {

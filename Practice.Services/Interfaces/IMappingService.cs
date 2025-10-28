@@ -30,20 +30,7 @@ namespace Practice.Services.Interfaces
         Session MapToEntity(CreateSessionDto dto);
         void MapToEntity(UpdateSessionDto dto, Session entity);
         
-        // Song mappings
-        SongResponseDto MapToDto(Song entity);
-        SongListDto MapToSongListDto(Song entity);
-        SongSearchDto MapToSongSearchDto(Song entity);
-        SongSummaryDto MapToSongSummaryDto(Song entity);
-        Song MapToEntity(CreateSongDto dto);
-        void MapToEntity(UpdateSongDto dto, Song entity);
         
-        // Songs mappings
-        SongsResponseDto MapToDto(Songs entity);
-        SongsListDto MapToSongsListDto(Songs entity);
-        SongsSummaryDto MapToSongsSummaryDto(Songs entity);
-        Songs MapToEntity(CreateSongsDto dto);
-        void MapToEntity(UpdateSongsDto dto, Songs entity);
         
         // Generic collection helpers
         IEnumerable<TDto> MapToDto<TDto, TEntity>(IEnumerable<TEntity> entities, Func<TEntity, TDto> mapFunction);
@@ -54,7 +41,6 @@ namespace Practice.Services.Interfaces
         IQueryable<DrillListDto> ProjectToDrillListDto(IQueryable<Drill> query);
         IQueryable<SessionResponseDto> ProjectToSessionResponseDto(IQueryable<Session> query);
         IQueryable<SessionListDto> ProjectToSessionListDto(IQueryable<Session> query);
-        IQueryable<SongResponseDto> ProjectToSongResponseDto(IQueryable<Song> query);
-        IQueryable<SongListDto> ProjectToSongListDto(IQueryable<Song> query);
+        
     }
 }

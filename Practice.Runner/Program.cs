@@ -1,11 +1,16 @@
 using Practice.Data.Models;
 using Practice.Runner;
+using Practice.Services.DTOs;
+using Practice.Services.Interfaces;
 using Practice.Services.Services;
 using Spectre.Console;
+using System.Diagnostics;
 
 class Program
 {
-    private static DataService _dataService = new DataService();
+    private static readonly DataService _dataService = new DataService();
+
+    private static readonly IExcelService _excelService = new ExcelService();
 
     static async Task Main(string[] args)
     {
@@ -193,7 +198,7 @@ class Program
             .BorderColor(Color.Green)
             .AddColumn("[bold]Property[/]")
             .AddColumn("[bold]Value[/]")
-            .AddRow("Start Time", $"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]");
+            .AddRow("Start Time", $"[cyan]{session.PracticeDate:yyyy-MM-dd HH:mm:ss}[/]");
 
         AnsiConsole.Write(sessionTable);
         AnsiConsole.WriteLine();
@@ -204,23 +209,42 @@ class Program
         Console.ReadKey();
     }
 
-    private static async Task<List<Session>> ImportSessionsAsync()
+    private static async Task<List<SessionDto>> ImportSessionsAsync()
     {
         AnsiConsole.Clear();
         Menu.DisplayHeader("Import Sessions");
 
         // Simulate importing sessions
-        var importedSessions = new List<Session>
+        string excelPath = @"C:\temp\PianoPracticeLog.xlsx";
+        var sheetNames = await _excelService.GetWorksheetNamesAsync(excelPath);
+        var practiceLogList = new List<SessionDto>();
+
+        foreach (var sheet in sheetNames)
         {
-            new Session { Id = 1, StartDate = DateTime.Now.AddHours(-2), EndDate = DateTime.Now },
-            new Session { Id = 2, StartDate = DateTime.Now.AddHours(-4), EndDate = DateTime.Now.AddHours(-2) }
-        };
+            if (!sheet.Contains("Sheet"))
+            {
+                var logs = await _excelService.ConvertXlsxToSessionDtoColAsync(excelPath, sheet);
+                if (logs?.Any() == true)
+                {
+                    var validLogs = logs.Where(m => m.PracticeDate.Date != DateTime.MinValue.Date);
+                    practiceLogList.AddRange(validLogs);
+                }
+            }
+        }
+
+        foreach (var pl in practiceLogList)
+        {
+            Debug.WriteLine($"{pl}");
+            // Now you can save to database using DataService
+        }
+
+        Debug.WriteLine($"Imported {practiceLogList.Count} practice logs from Excel.");
 
         AnsiConsole.MarkupLine("[green]✓ Sessions imported successfully![/]");
         AnsiConsole.WriteLine();
         AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
         Console.ReadKey();
 
-        return importedSessions;
+        return practiceLogList;
     }
 }
