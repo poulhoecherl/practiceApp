@@ -26,20 +26,52 @@ namespace Practice.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.Entity<Session>().HasData(
-            //    new Session { Id=1, StartDate = DateTime.Now, EndDate = DateTime.Now.AddMinutes(1) },
-            //    new Session { Id = 2, StartDate = DateTime.Now.AddMinutes(2), EndDate = DateTime.Now.AddMinutes(3) }
-            //);
+            // No seed
+        }
 
-            //modelBuilder.Entity<Drill>().HasData(
-            //    new Drill { Id = 1, StartDate = DateTime.Now, EndDate = DateTime.Now.AddMinutes(1) },
-            //    new Drill { Id = 2, StartDate = DateTime.Now.AddMinutes(2), EndDate = DateTime.Now.AddMinutes(3) }
-            //);
+        public override int SaveChanges()
+        {
+            UpdateAuditFields();
+            return base.SaveChanges();
+        }
 
-            //modelBuilder.Entity<Song>().HasData(
-            //    new Song { Id = 1, Name = "All of Me", Artist = "Oscar Peterson", Genre= "Jazz"},
-            //    new Song { Id = 2, Name = "Recordame", Artist = "Joe Henderson", Genre = "Jazz" }
-            //);
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            UpdateAuditFields();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void UpdateAuditFields()
+        {
+            var entries = ChangeTracker.Entries<IAuditableEntity>();
+            var currentUser = GetCurrentUser(); 
+            var currentTime = DateTime.UtcNow;
+
+            foreach (var entry in entries)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.RowCreatedOn = currentTime;
+                        entry.Entity.RowCreatedBy = currentUser;
+                        break;
+
+                    case EntityState.Modified:
+                        entry.Entity.RowModifiedOn = currentTime;
+                        entry.Entity.RowModifiedBy = currentUser;
+                        break;
+                }
+            }
+        }
+
+        // You'll need to implement this method based on your authentication system
+        private string GetCurrentUser()
+        {
+            // Example implementations:
+            return Environment.UserName; // For desktop apps
+            // return _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "System"; // For web apps
+            // return "System"; // For testing/demo purposes
+            //return "System"; // Default implementation
         }
     }
 }

@@ -1,22 +1,28 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Practice.Data.Models
 {
-    public class Session
+    public class Session : IAuditableEntity
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        [Required]
         public int UserId { get; set; } = 1;
 
         [Required]
         public DateTime PracticeDate { get; set; }
-
+        
+        [Required]
         public DateTime? StartTime { get; set; }
 
         public DateTime? EndTime { get; set; }
 
         [MaxLength(500)]
+        [Required]
         public string? Activity { get; set; }
 
         /// <summary>
@@ -27,8 +33,14 @@ namespace Practice.Data.Models
         [MaxLength(2000)]
         public string? Notes { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Required]
+        public DateTime RowCreatedOn { get; set; } = DateTime.UtcNow;
 
-        public DateTime? UpdatedAt { get; set; }
+        [Required]
+        public string RowCreatedBy { get; set; } = string.Empty;
+
+        public DateTime? RowModifiedOn { get; set; }
+
+        public string? RowModifiedBy { get; set; }
     }
 }

@@ -18,7 +18,6 @@ public class MappingServiceTests
 
     public MappingServiceTests()
     {
-        //_mappingService = new MappingService();
         _excelService = new ExcelService();
     }
 

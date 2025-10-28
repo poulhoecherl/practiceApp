@@ -1,10 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Practice.Data.Models
 {
-    public class Drill
+    public class Drill : IAuditableEntity
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         
         [Required]
@@ -21,7 +24,15 @@ namespace Practice.Data.Models
         
         [MaxLength(100)]
         public string? Category { get; set; }
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public DateTime RowCreatedOn { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public string RowCreatedBy { get; set; } = string.Empty;
+
+        public DateTime? RowModifiedOn { get; set; }
+
+        public string? RowModifiedBy { get; set; }
     }
 }
