@@ -1,4 +1,4 @@
-﻿namespace Practice.Runner
+﻿namespace Practice.Console
 {
     public class MenuItem
     {
