@@ -1,6 +1,6 @@
 using Practice.Web.Components;
 
-namespace Practrice.Web
+namespace Practice.Web
 {
     public class Program
     {
