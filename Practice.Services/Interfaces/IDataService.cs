@@ -9,15 +9,15 @@ namespace Practice.Services.Interfaces
 
         Task<Song> GetSong(string name);
 
-        Task<List<SessionResponseDto>> GetSessions();
+        Task<List<Session>> GetSessions();
 
-        Task<SessionResponseDto> GetSession(int id);
+        Task<Session> GetSession(int id);
 
         Task AddSession(Session newSession);
 
         Task DeleteSession(Session delSession);
 
-        Task<UpdateSessionDto> FinishSession(int SessionId);
+        Task<Session> FinishSession(int SessionId);
 
         Task<List<Drill>> GetDrills();
 

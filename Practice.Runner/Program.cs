@@ -21,59 +21,66 @@ class Program
     {
         bool exitRequested = false;
 
-        while (!exitRequested)
+        try
         {
-            Menu.DisplayHeader();
-
-            var choice = Menu.DisplayMenu();
-
-            var subChoice = string.Empty;
-
-            switch (choice)
+            while (!exitRequested)
             {
-                case "Sessions":
-                    subChoice = Menu.DisplaySessionOptions();
-                    if (subChoice.Contains("Create"))
-                    {
-                        await CreateNewSessionAsync();
+                Menu.DisplayHeader();
 
-                    }
-                    else if (subChoice.Contains("Finish"))
-                    {
-                        var sessionMenu = await GetOpenSessionListMenuAsync();
+                var choice = Menu.DisplayMenu();
 
-                        Menu.DisplayHeader("Finish Session");
+                var subChoice = string.Empty;
 
-                        var selectedOption = AnsiConsole.Prompt(sessionMenu);
+                switch (choice)
+                {
+                    case "Sessions":
+                        subChoice = Menu.DisplaySessionOptions();
+                        if (subChoice.Contains("Create"))
+                        {
+                            await CreateNewSessionAsync();
 
-                        selectedOption.Action?.Invoke();
-                    }
-                    else if (subChoice.Contains("View"))
-                    {
-                        DataService ds = new DataService();
+                        }
+                        else if (subChoice.Contains("Finish"))
+                        {
+                            var sessionMenu = await GetOpenSessionListMenuAsync();
 
-                        var sessions = await ds.GetSessions();
+                            Menu.DisplayHeader("Finish Session");
 
-                        await DisplaySessionsAsync();
-                    }
-                    else if (subChoice.Contains("Import"))
-                    {
-                        var importSessions = await ImportSessionsAsync();
-                    }
-                    break;
-                case "Songs":
-                    subChoice = Menu.DisplaySongOptions();
-                    //await CreateNewSongAsync();
-                    break;
-                case "Drills":
-                    subChoice = Menu.DisplayDrillOptions();
-                    //await CreateNewDrillAsync();
-                    break;
-                case "Exit":
-                    exitRequested = true;
-                    AnsiConsole.MarkupLine("\n[green]Goodbye! Happy practicing![/]");
-                    break;
+                            var selectedOption = AnsiConsole.Prompt(sessionMenu);
+
+                            selectedOption.Action?.Invoke();
+                        }
+                        else if (subChoice.Contains("View"))
+                        {
+                            DataService ds = new DataService();
+
+                            var sessions = await ds.GetSessions();
+
+                            await DisplaySessionsAsync();
+                        }
+                        else if (subChoice.Contains("Import"))
+                        {
+                            var importSessions = await ImportSessionsAsync();
+                        }
+                        break;
+                    case "Songs":
+                        subChoice = Menu.DisplaySongOptions();
+                        //await CreateNewSongAsync();
+                        break;
+                    case "Drills":
+                        subChoice = Menu.DisplayDrillOptions();
+                        //await CreateNewDrillAsync();
+                        break;
+                    case "Exit":
+                        exitRequested = true;
+                        AnsiConsole.MarkupLine("\n[green]Goodbye! Happy practicing![/]");
+                        break;
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLineInterpolated($"\n[red] {ex.Message}![/]");
         }
     }
 
@@ -99,10 +106,10 @@ class Program
         var sessionItems = await _dataService.GetOpenSessions();
         foreach (var session in sessionItems)
         {
-            // AnsiConsole.WriteLine($"Session ID: {session.Id}, Start Date: {session.StartDate}, End Date: {session.EndDate}");
+            // AnsiConsole.WriteLine($"Session ID: {session.Id}, Start Date: {session.StartTime}, End Date: {session.EndTime}");
             sessionMenuList.Add(new MenuItem
             {
-                Name = $"[[{session.Id}]] > Start Date: {session.StartDate}, End Date: {session.EndDate}",
+                Name = $"[[{session.Id}]] > Start Date: {session.StartTime}, End Date: {session.EndTime}",
                 Action = () => { _ = HandleSessionMenuAction(session.Id); }
             });
         }
@@ -140,19 +147,19 @@ class Program
 
         foreach (var session in sessions)
         {
-            if (session.EndDate == new DateTime(1901, 1, 1))
+            if (session.EndTime == new DateTime(1901, 1, 1))
             {
                 sessionTable.AddRow($"[cyan]{session.Id}[/]"
-                , $"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]"
+                , $"[cyan]{session.StartTime:yyyy-MM-dd HH:mm:ss}[/]"
                 , $"[red]Incomplete[/]"
                 , $"");
             }
             else
             {
                 sessionTable.AddRow($"[cyan]{session.Id}[/]"
-                    , $"[cyan]{session.StartDate:yyyy-MM-dd HH:mm:ss}[/]"
-                    , $"[cyan]{session.EndDate:yyyy-MM-dd HH:mm}[/]"
-                    , $"[yellow]{session.Duration}[/]");
+                    , $"[cyan]{session.StartTime:yyyy-MM-dd HH:mm:ss}[/]"
+                    , $"[cyan]{session.EndTime:yyyy-MM-dd HH:mm}[/]"
+                    , $"[yellow]{session.DurationMinutes}[/]");
             }
         }
 
@@ -212,39 +219,56 @@ class Program
     private static async Task<List<SessionDto>> ImportSessionsAsync()
     {
         AnsiConsole.Clear();
-        Menu.DisplayHeader("Import Sessions");
+        var msg = "Import Sessions";
 
-        // Simulate importing sessions
-        string excelPath = @"C:\temp\PianoPracticeLog.xlsx";
-        var sheetNames = await _excelService.GetWorksheetNamesAsync(excelPath);
-        var practiceLogList = new List<SessionDto>();
+        Menu.DisplayHeader(msg);
 
-        foreach (var sheet in sheetNames)
+        try
         {
-            if (!sheet.Contains("Sheet"))
+            // import sessions from Excel
+            string excelPath = @"C:\temp\PianoPracticeLog.xlsx";
+            var sheetNames = await _excelService.GetWorksheetNamesAsync(excelPath);
+            var practiceLogList = new List<SessionDto>();
+
+            foreach (var sheet in sheetNames)
             {
-                var logs = await _excelService.ConvertXlsxToSessionDtoColAsync(excelPath, sheet);
-                if (logs?.Any() == true)
+                if (!sheet.Contains("Sheet"))
                 {
-                    var validLogs = logs.Where(m => m.PracticeDate.Date != DateTime.MinValue.Date);
-                    practiceLogList.AddRange(validLogs);
+                    var logs = await _excelService.ConvertXlsxToSessionDtoColAsync(excelPath, sheet);
+                    if (logs?.Any() == true)
+                    {
+                        var validLogs = logs.Where(m => m.PracticeDate.Date != DateTime.MinValue.Date);
+                        practiceLogList.AddRange(validLogs);
+                    }
                 }
             }
-        }
 
-        foreach (var pl in practiceLogList)
+            if(practiceLogList.Count == 0)
+            {
+                msg = "No practice logs found in the Excel file.";
+                AnsiConsole.MarkupLine($"[red] {msg}[/]");
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
+                Console.ReadKey();
+                return practiceLogList;
+            }
+
+            _dataService.AddSessionsFromDto(practiceLogList);
+
+            msg = $"Imported {practiceLogList.Count} practice logs from Excel.";
+
+            Debug.WriteLine(msg);
+
+            AnsiConsole.MarkupLine($"[green] {msg}[/]");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
+            Console.ReadKey();
+
+            return practiceLogList;
+        }
+        catch
         {
-            Debug.WriteLine($"{pl}");
-            // Now you can save to database using DataService
+            throw;
         }
-
-        Debug.WriteLine($"Imported {practiceLogList.Count} practice logs from Excel.");
-
-        AnsiConsole.MarkupLine("[green]✓ Sessions imported successfully![/]");
-        AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine("[dim]Press any key to return to main menu...[/]");
-        Console.ReadKey();
-
-        return practiceLogList;
     }
 }

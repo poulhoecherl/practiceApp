@@ -38,7 +38,7 @@ Practice.Services/
 - **CreateDrillDto**: Creating new drills
 - **UpdateDrillDto**: Updating existing drills
 - **DrillResponseDto**: Detailed drill information
-- **DrillListDto**: Simplified drill information for lists
+- **DrillDto**: Simplified drill information for lists
 
 ### Song Entity
 - **CreateSongDto**: Creating new songs

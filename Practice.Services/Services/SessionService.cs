@@ -17,7 +17,7 @@ namespace Practice.Services.Services
         }
 
         // Session CRUD operations
-        public async Task<SessionResponseDto> GetSessionAsync(int id)
+        public async Task<SessionDto> GetSessionAsync(int id)
         {
             var session = await _unitOfWork.Sessions.GetByIdAsync(id);
             if (session == null)
@@ -26,13 +26,13 @@ namespace Practice.Services.Services
             return _mappingService.MapToDto(session);
         }
 
-        public async Task<IEnumerable<SessionListDto>> GetAllSessionsAsync()
+        public async Task<IEnumerable<SessionDto>> GetAllSessionsAsync()
         {
             var sessions = await _unitOfWork.Sessions.GetAllAsync();
-            return _mappingService.MapToDto(sessions, _mappingService.MapToSessionListDto);
+            return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
-        public async Task<SessionResponseDto> CreateSessionAsync(CreateSessionDto createSessionDto)
+        public async Task<SessionDto> CreateSessionAsync(SessionDto createSessionDto)
         {
             if (createSessionDto == null)
                 throw new ArgumentNullException(nameof(createSessionDto));
@@ -44,7 +44,7 @@ namespace Practice.Services.Services
             return _mappingService.MapToDto(createdSession);
         }
 
-        public async Task<SessionResponseDto> UpdateSessionAsync(int id, UpdateSessionDto updateSessionDto)
+        public async Task<SessionDto> UpdateSessionAsync(int id, SessionDto updateSessionDto)
         {
             if (updateSessionDto == null)
                 throw new ArgumentNullException(nameof(updateSessionDto));
@@ -53,7 +53,6 @@ namespace Practice.Services.Services
             if (existingSession == null)
                 throw new KeyNotFoundException($"Session with id {id} not found");
 
-            _mappingService.MapToEntity(updateSessionDto, existingSession);
             var updatedSession = await _unitOfWork.Sessions.UpdateAsync(existingSession);
             await _unitOfWork.SaveChangesAsync();
 
@@ -77,7 +76,7 @@ namespace Practice.Services.Services
         /// This is the main method for starting a new practice session.
         /// </summary>
         /// <returns>The newly created session DTO</returns>
-        public async Task<SessionResponseDto> CreateNewSessionAsync()
+        public async Task<SessionDto> CreateNewSessionAsync()
         {
             var now = DateTime.UtcNow;
             
@@ -89,10 +88,10 @@ namespace Practice.Services.Services
             }
 
             // Create a new session DTO with current time as start and a future placeholder end time
-            var createSessionDto = new CreateSessionDto
+            var createSessionDto = new SessionDto
             {
-                StartDate = now,
-                EndDate = now.AddHours(1) // Default 1-hour session, can be updated later
+                StartTime = now,
+                EndTime = now.AddHours(1) // Default 1-hour session, can be updated later
             };
 
             // Use the standard create method which internally uses MappingService
@@ -106,7 +105,7 @@ namespace Practice.Services.Services
         /// The session remains "active" until explicitly ended.
         /// </summary>
         /// <returns>The newly created active session DTO</returns>
-        public async Task<SessionResponseDto> StartNewSessionAsync()
+        public async Task<SessionDto> StartNewSessionAsync()
         {
             var now = DateTime.UtcNow;
             
@@ -135,7 +134,7 @@ namespace Practice.Services.Services
         /// Ends the current active session by setting the end time to now.
         /// </summary>
         /// <returns>The updated session DTO</returns>
-        public async Task<SessionResponseDto> EndCurrentSessionAsync()
+        public async Task<SessionDto> EndCurrentSessionAsync()
         {
             var currentSession = await _unitOfWork.Sessions.GetCurrentSessionAsync();
             if (currentSession == null)
@@ -151,51 +150,51 @@ namespace Practice.Services.Services
             return _mappingService.MapToDto(updatedSession);
         }
 
-        public async Task<SessionResponseDto?> GetCurrentSessionAsync()
+        public async Task<SessionDto?> GetCurrentSessionAsync()
         {
             var currentSession = await _unitOfWork.Sessions.GetCurrentSessionAsync();
             return currentSession != null ? _mappingService.MapToDto(currentSession) : null;
         }
 
-        public async Task<SessionResponseDto?> GetLatestSessionAsync()
+        public async Task<SessionDto?> GetLatestSessionAsync()
         {
             var latestSession = await _unitOfWork.Sessions.GetLatestSessionAsync();
             return latestSession != null ? _mappingService.MapToDto(latestSession) : null;
         }
 
         // Session query operations
-        public async Task<IEnumerable<SessionResponseDto>> GetSessionsByDateRangeAsync(DateTime startDate, DateTime endDate)
+        public async Task<IEnumerable<SessionDto>> GetSessionsByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
             var sessions = await _unitOfWork.Sessions.GetSessionsByDateRangeAsync(startDate, endDate);
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
-        public async Task<IEnumerable<SessionResponseDto>> GetActiveSessionsAsync()
+        public async Task<IEnumerable<SessionDto>> GetActiveSessionsAsync()
         {
             var sessions = await _unitOfWork.Sessions.GetActiveSessionsAsync();
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
-        public async Task<IEnumerable<SessionResponseDto>> GetCompletedSessionsAsync()
+        public async Task<IEnumerable<SessionDto>> GetCompletedSessionsAsync()
         {
             var sessions = await _unitOfWork.Sessions.GetCompletedSessionsAsync();
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
-        public async Task<IEnumerable<SessionResponseDto>> GetSessionsForTodayAsync()
+        public async Task<IEnumerable<SessionDto>> GetSessionsForTodayAsync()
         {
             var sessions = await _unitOfWork.Sessions.GetSessionsForTodayAsync();
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
         // Session summary and statistics
-        public async Task<SessionSummaryDto> GetSessionSummaryAsync(int id)
+        public async Task<SessionDto> GetSessionSummaryAsync(int id)
         {
             var session = await _unitOfWork.Sessions.GetByIdAsync(id);
             if (session == null)
                 throw new KeyNotFoundException($"Session with id {id} not found");
 
-            return _mappingService.MapToSessionSummaryDto(session);
+            return _mappingService.MapToDto(session);
         }
 
         public async Task<TimeSpan> GetTotalSessionDurationAsync()

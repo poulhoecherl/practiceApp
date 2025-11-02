@@ -3,69 +3,61 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Practice.Services.DTOs
 {
-    public class CreateSessionDto
-    {
-        [Required]
-        public DateTime StartDate { get; set; }
-
-        [Required]
-        [CustomValidation(typeof(SessionValidationMethods), nameof(SessionValidationMethods.ValidateEndDate))]
-        public DateTime EndDate { get; set; }
-    }
-
-    public class UpdateSessionDto : CreateSessionDto
-    {
-        [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Id must be greater than 0")]
-        public int Id { get; set; }
-    }
-
-    public class SessionResponseDto
+    public class SessionDto
     {
         public int Id { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
 
-        public bool IsComplete => EndDate == new DateTime(1901,1,1);
+        [Required]
+        public int UserId { get; set; } = 1;
 
-        public string Duration
+        [Required]
+        public DateTime PracticeDate { get; set; }
+
+        [Required]
+        public DateTime? StartTime { get; set; }
+
+        public DateTime? EndTime { get; set; }
+
+        [MaxLength(500)]
+        [Required]
+        public string? Activity { get; set; }
+
+        /// <summary>
+        /// Duration in minutes
+        /// </summary>
+        public int DurationMinutes { get; set; }
+
+        [MaxLength(2000)]
+        public string? Notes { get; set; }
+
+        [Required]
+        public DateTime RowCreatedOn { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public string RowCreatedBy { get; set; } = string.Empty;
+
+        public DateTime? RowModifiedOn { get; set; }
+
+        public string? RowModifiedBy { get; set; }  
+        
+        public string DurationFormatted
         {
             get
             {
-                TimeSpan ts = EndDate - StartDate;
+                TimeSpan ts = (TimeSpan)(EndTime.GetValueOrDefault() - StartTime.GetValueOrDefault());
                 return ts.Humanize(2); // This will now work with the Humanizer library
             }
         }
     }
 
-    public class SessionListDto
-    {
-        public int Id { get; set; }
-        public DateTime StartDate { get; set; }
-    }
-
-    public class SessionSearchDto
-    {
-        public DateTime? StartDateFrom { get; set; }
-        public DateTime? StartDateTo { get; set; }
-        public DateTime? EndDateFrom { get; set; }
-        public DateTime? EndDateTo { get; set; }
-    }
-
-    public class SessionSummaryDto
-    {
-        public int Id { get; set; }
-        public int DurationMinutes { get; set; }
-    }
-
     public static class SessionValidationMethods
     {
-        public static ValidationResult? ValidateEndDate(DateTime endDate, ValidationContext context)
+        public static ValidationResult? ValidateEndTime(DateTime endDate, ValidationContext context)
         {
-            var instance = context.ObjectInstance as CreateSessionDto;
-            if (instance != null && instance.StartDate >= endDate)
+            var instance = context.ObjectInstance as SessionDto;
+            if (instance != null && instance.StartTime >= endDate)
             {
-                return new ValidationResult("EndDate must be greater than StartDate.");
+                return new ValidationResult("EndTime must be greater than StartTime.");
             }
             return ValidationResult.Success;
         }

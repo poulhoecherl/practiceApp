@@ -21,6 +21,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="DTOs\DrillDtos.cs" />
+    <Compile Remove="DTOs\DrillsDto.cs" />
+    <Compile Remove="DTOs\SessionDtos.cs" />
     <Compile Remove="DTOs\SongsDto.cs" />
     <Compile Remove="Interfaces\ISongService.cs" />
     <Compile Remove="Interfaces\ISongsService.cs" />

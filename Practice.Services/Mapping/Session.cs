@@ -1,9 +1,10 @@
 ﻿using Practice.Data.Models;
 using Practice.Services.DTOs;
 
+
 namespace Practice.Services.Mapping
 {
-    public class Sesssion
+    public class SessionMapper
     {
         public Session MapToEntity(SessionDto dto)
         {
@@ -11,12 +12,17 @@ namespace Practice.Services.Mapping
 
             return new Session
             {
-                UserId = dto.UserId,
+                Id = dto.Id,
+                UserId = dto.UserId,  // This is what should happen to your dtoId
                 PracticeDate = dto.PracticeDate,
-                
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
                 Activity = dto.Activity,
-                
-                Notes = dto.Notes
+                DurationMinutes = dto.DurationMinutes,
+                Notes = dto.Notes,
+                // Audit fields would typically be set by your service layer
+                RowCreatedOn = DateTime.UtcNow,
+                RowCreatedBy = "System" // or get from current user context
             };
         }
 
@@ -24,15 +30,21 @@ namespace Practice.Services.Mapping
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            return new SessionDto()
+            return new SessionDto
             {
+                Id = entity.Id,
                 UserId = entity.UserId,
                 PracticeDate = entity.PracticeDate,
+                StartTime = entity.StartTime,
+                EndTime = entity.EndTime,
                 Activity = entity.Activity,
-                Notes = entity.Notes
+                DurationMinutes = entity.DurationMinutes,
+                Notes = entity.Notes,
+                RowCreatedOn = entity.RowCreatedOn,
+                RowCreatedBy = entity.RowCreatedBy,
+                RowModifiedOn = entity.RowModifiedOn,
+                RowModifiedBy = entity.RowModifiedBy
             };
-
-
         }
     }
 }

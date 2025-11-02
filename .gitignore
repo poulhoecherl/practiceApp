@@ -14,3 +14,6 @@
 /Practice.Data/obj
 /Practice.Data/JSON
 /Practice.Data/Migrations
+/Practrice.Web/bin/Debug/net9.0
+/Practrice.Web/obj
+/Practrice.Web/wwwroot/lib/bootstrap/dist

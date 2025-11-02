@@ -87,7 +87,7 @@ public class MappingServiceTests
             Name = "Old Song"
         };
 
-        var updateDto = new UpdateSongDto
+        var updateDto = new SongDto
         {
             Id = 1,
         };

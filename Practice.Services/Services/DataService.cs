@@ -3,6 +3,7 @@ using Practice.Data;
 using Practice.Data.Models;
 using Practice.Services.DTOs;
 using Practice.Services.Interfaces;
+using System.Diagnostics;
 
 namespace Practice.Services.Services
 {
@@ -39,7 +40,7 @@ namespace Practice.Services.Services
             throw new NotImplementedException();
         }
 
-        public async Task<SessionResponseDto> GetSession(int id)
+        public async Task<Session> GetSession(int id)
         {
             try
             {
@@ -48,17 +49,10 @@ namespace Practice.Services.Services
                 var session = await context.Sessions.Where(m => m.Id == id).SingleOrDefaultAsync();
                 if (session != null)
                 {
-
-                    var retVal = new SessionResponseDto()
-                    {
-                        Id = session.Id,
-                        
-                    };
-
-                    return retVal;
+                    return session;
                 }
 
-                return new SessionResponseDto();
+                return new Session();
             }
             catch
             {
@@ -67,12 +61,12 @@ namespace Practice.Services.Services
             }
         }
 
-        public async Task<List<SessionResponseDto>> GetSessions()
+        public async Task<List<Session>> GetSessions()
         {
             using (var context = new PracticeDbContext())
             {
                 var sessions = await context.Sessions.ToListAsync();
-                var retVal = sessions.Select(s => new SessionResponseDto()
+                var retVal = sessions.Select(s => new Session()
                 {
                     Id = s.Id,
                     
@@ -82,7 +76,7 @@ namespace Practice.Services.Services
             }
         }
 
-        public async Task<List<SessionResponseDto>> GetOpenSessions()
+        public async Task<List<Session>> GetOpenSessions()
         {
             using (var context = new PracticeDbContext())
             {
@@ -92,7 +86,7 @@ namespace Practice.Services.Services
                     return [];
                 }
 
-                var retVal = sessions.Select(s => new SessionResponseDto()
+                var retVal = sessions.Select(s => new Session()
                 {
                     Id = s.Id,
                     
@@ -146,7 +140,7 @@ namespace Practice.Services.Services
             throw new NotImplementedException();
         }
 
-        public async Task<UpdateSessionDto> FinishSession(int SessionId)
+        public async Task<Session> FinishSession(int SessionId)
         {
             try
             {
@@ -160,12 +154,18 @@ namespace Practice.Services.Services
 
                 var session = await GetSession(SessionId);
 
-                return new UpdateSessionDto()
+                return new Session()
                 {
                     Id = session.Id,
-                    EndDate = session.EndDate,
-                    StartDate = session.StartDate
+                    PracticeDate = session.PracticeDate,
+                    Activity = session.Activity,
+                    DurationMinutes = session.DurationMinutes,
+                    EndTime = session.EndTime,
+                    Notes = session.Notes,
+                    StartTime = session.StartTime,
+                    UserId = session.UserId,
                 };
+
             }
             catch
             {
@@ -173,6 +173,39 @@ namespace Practice.Services.Services
                 throw;
             }
 
+        }
+
+        public void AddSessionsFromDto(List<SessionDto> logs)
+        {
+            try
+            {
+                using var context = new PracticeDbContext();
+
+                foreach (var log in logs)
+                {
+                    Debug.WriteLine($" > Saving log entry: {log}");
+                    // TODO: save to database using DataService
+                    var session = new Session()
+                    {
+                        PracticeDate = log.PracticeDate,
+                        StartTime = log.StartTime ?? log.PracticeDate,
+                        EndTime = log.EndTime,
+                        DurationMinutes = log.DurationMinutes,
+                        Notes = log.Notes,
+                        Activity = log.Activity,
+                        RowCreatedBy = "import",
+                        UserId = 1,
+                    };
+
+                    context.Sessions.Add(session);
+                }
+
+                context.SaveChanges();
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }
