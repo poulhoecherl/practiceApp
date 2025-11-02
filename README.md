@@ -6,6 +6,8 @@ A .NET console application for tracking daily piano practice sessions.
 
 This application will help musicians track their daily piano practice sessions, including drill exercises and song practice, with all data stored locally in a JSON format using LiteDB.
 
+Project Page: https://github.com/poulhoecherl/practiceApp
+
 ## Features
 
 ### Core Functionality
