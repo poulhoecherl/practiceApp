@@ -10,12 +10,10 @@ namespace Practice.Services.Services
     public class DataService : IDataService
     {
         private string connectionString = string.Empty;
-
         private string dbName = "practice.db";
 
         public DataService()
         {
-            // Initialize the database path
             string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             DirectoryInfo currentDir = new DirectoryInfo(baseDirectory);
             DirectoryInfo twoLevelsUp = currentDir.Parent?.Parent?.Parent?.Parent;
@@ -27,7 +25,6 @@ namespace Practice.Services.Services
             {
                 connectionString = $"DataSource= {dbName}";
             }
-
         }
 
         public async Task<Drill> GetDrill(int id)
@@ -45,7 +42,7 @@ namespace Practice.Services.Services
             try
             {
                 using var context = new PracticeDbContext();
-                
+
                 var session = await context.Sessions.Where(m => m.Id == id).SingleOrDefaultAsync();
                 if (session != null)
                 {
@@ -56,7 +53,6 @@ namespace Practice.Services.Services
             }
             catch
             {
-
                 throw;
             }
         }
@@ -69,7 +65,6 @@ namespace Practice.Services.Services
                 var retVal = sessions.Select(s => new Session()
                 {
                     Id = s.Id,
-                    
                 }).ToList();
 
                 return retVal;
@@ -80,8 +75,8 @@ namespace Practice.Services.Services
         {
             using (var context = new PracticeDbContext())
             {
-                var sessions = await context.Sessions.Where(m => m.StartTime == new DateTime(1901,1,1)).ToListAsync();
-                if(sessions.Count != 0 == false)
+                var sessions = await context.Sessions.Where(m => m.StartTime == new DateTime(1901, 1, 1)).ToListAsync();
+                if (sessions.Count != 0 == false)
                 {
                     return [];
                 }
@@ -89,7 +84,6 @@ namespace Practice.Services.Services
                 var retVal = sessions.Select(s => new Session()
                 {
                     Id = s.Id,
-                    
                 }).ToList();
 
                 return retVal;
@@ -108,24 +102,31 @@ namespace Practice.Services.Services
             }
             catch
             {
-
                 throw;
             }
         }
 
+        /// <summary>
+        /// SOFT DELETE ONLY - Marks session as deleted but preserves data
+        /// </summary>
         public async Task DeleteSession(Session delSession)
         {
             try
             {
                 using (var context = new PracticeDbContext())
                 {
-                    context.Sessions.Remove(delSession);
-                    await context.SaveChangesAsync();
+                    // FIND the session first
+                    var sessionToDelete = await context.Sessions.FirstOrDefaultAsync(s => s.Id == delSession.Id);
+                    if (sessionToDelete != null)
+                    {
+                        // SOFT DELETE: Mark as deleted instead of removing
+                        sessionToDelete.Deleted = true;
+                        await context.SaveChangesAsync();
+                    }
                 }
             }
             catch
             {
-
                 throw;
             }
         }
@@ -146,10 +147,7 @@ namespace Practice.Services.Services
             {
                 using var context = new PracticeDbContext();
 
-                // finishing the session
                 var sesh = context.Sessions.Where(s => s.Id == SessionId);
-                    //.ExecuteUpdateAsync(s => s.SetProperty(e => e.DurationMinutes, DateTime.Now));
-                    
                 await context.SaveChangesAsync();
 
                 var session = await GetSession(SessionId);
@@ -165,14 +163,11 @@ namespace Practice.Services.Services
                     StartTime = session.StartTime,
                     UserId = session.UserId,
                 };
-
             }
             catch
             {
-
                 throw;
             }
-
         }
 
         public void AddSessionsFromDto(List<SessionDto> logs)
@@ -184,7 +179,6 @@ namespace Practice.Services.Services
                 foreach (var log in logs)
                 {
                     Debug.WriteLine($" > Saving log entry: {log}");
-                    // TODO: save to database using DataService
                     var session = new Session()
                     {
                         PracticeDate = log.PracticeDate,

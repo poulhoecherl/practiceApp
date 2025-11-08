@@ -34,5 +34,7 @@ namespace Practice.Data.Models
         public DateTime? RowModifiedOn { get; set; }
 
         public string? RowModifiedBy { get; set; }
+
+        public bool Deleted { get; set; }
     }
 }

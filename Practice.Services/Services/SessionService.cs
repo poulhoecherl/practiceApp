@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Practice.Data;
 using Practice.Data.Interfaces;
 using Practice.Data.Models;
 using Practice.Services.DTOs;
@@ -59,9 +61,12 @@ namespace Practice.Services.Services
             return _mappingService.MapToDto(updatedSession);
         }
 
+        /// <summary>
+        /// SOFT DELETE ONLY - Marks session as deleted but preserves data
+        /// </summary>
         public async Task<bool> DeleteSessionAsync(int id)
         {
-            var result = await _unitOfWork.Sessions.DeleteAsync(id);
+            var result = await _unitOfWork.Sessions.DeleteAsync(id); // This should trigger soft delete
             if (result)
             {
                 await _unitOfWork.SaveChangesAsync();
@@ -70,7 +75,6 @@ namespace Practice.Services.Services
         }
 
         // Session-specific operations
-
         /// <summary>
         /// Creates a new practice session that starts immediately and is open-ended.
         /// This is the main method for starting a new practice session.
@@ -215,6 +219,214 @@ namespace Practice.Services.Services
         public async Task<int> GetSessionCountAsync()
         {
             return await _unitOfWork.Sessions.CountAsync();
+        }
+
+        /// <summary>
+        /// SOFT DELETE AWARE: Adds a drill to session or restores if previously deleted
+        /// </summary>
+        public async Task<bool> AddDrillToSessionAsync(int sessionId, int drillId, string? notes = null, int? rating = null)
+        {
+            var session = await _unitOfWork.Sessions.GetByIdAsync(sessionId);
+            if (session == null || session.Deleted)
+                throw new KeyNotFoundException($"Active session with id {sessionId} not found");
+
+            var drill = await _unitOfWork.Drills.GetByIdAsync(drillId);
+            if (drill == null || drill.Deleted)
+                throw new KeyNotFoundException($"Active drill with id {drillId} not found");
+
+            using var context = new PracticeDbContext();
+            
+            var existingRelation = await context.SessionDrills
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(sd => sd.SessionId == sessionId && sd.DrillId == drillId);
+            
+            if (existingRelation != null)
+            {
+                if (existingRelation.Deleted)
+                {
+                    // RESTORE the soft-deleted relationship
+                    existingRelation.Deleted = false;
+                    existingRelation.CompletedAt = DateTime.UtcNow;
+                    existingRelation.Notes = notes;
+                    existingRelation.PerformanceRating = rating;
+                    await context.SaveChangesAsync();
+                    return true;
+                }
+                return false; // Already exists and is active
+            }
+            
+            var sessionDrill = new Session_Drill
+            {
+                SessionId = sessionId,
+                DrillId = drillId,
+                CompletedAt = DateTime.UtcNow,
+                Notes = notes,
+                PerformanceRating = rating
+            };
+            
+            await context.SessionDrills.AddAsync(sessionDrill);
+            await context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        /// <summary>
+        /// SOFT DELETE AWARE: Adds a song to session or restores if previously deleted
+        /// </summary>
+        public async Task<bool> AddSongToSessionAsync(int sessionId, int songId, string? notes = null)
+        {
+            using var context = new PracticeDbContext();
+            
+            var existingRelation = await context.SessionSongs
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(ss => ss.SessionId == sessionId && ss.SongId == songId);
+            
+            if (existingRelation != null)
+            {
+                if (existingRelation.Deleted)
+                {
+                    // RESTORE the soft-deleted relationship
+                    existingRelation.Deleted = false;
+                    existingRelation.CompletedAt = DateTime.UtcNow;
+                    existingRelation.Notes = notes;
+                    await context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
+            }
+            
+            var sessionSong = new Session_Song
+            {
+                SessionId = sessionId,
+                SongId = songId,
+                CompletedAt = DateTime.UtcNow,
+                Notes = notes
+            };
+            
+            await context.SessionSongs.AddAsync(sessionSong);
+            await context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        public async Task<IEnumerable<Drill>> GetSessionDrillsAsync(int sessionId)
+        {
+            using var context = new PracticeDbContext();
+            
+            var drills = await context.SessionDrills
+                .Where(sd => sd.SessionId == sessionId) // Query filter automatically excludes deleted
+                .Include(sd => sd.Drill)
+                .Select(sd => sd.Drill)
+                .ToListAsync();
+            
+            return drills;
+        }
+
+        public async Task<IEnumerable<Song>> GetSessionSongsAsync(int sessionId)
+        {
+            using var context = new PracticeDbContext();
+            
+            var songs = await context.SessionSongs
+                .Where(ss => ss.SessionId == sessionId) // Query filter automatically excludes deleted
+                .Include(ss => ss.Song)
+                .Select(ss => ss.Song)
+                .ToListAsync();
+            
+            return songs;
+        }
+
+        /// <summary>
+        /// SOFT DELETE: Marks drill relationship as deleted but preserves data
+        /// </summary>
+        public async Task<bool> RemoveDrillFromSessionAsync(int sessionId, int drillId)
+        {
+            using var context = new PracticeDbContext();
+            
+            var sessionDrill = await context.SessionDrills
+                .FirstOrDefaultAsync(sd => sd.SessionId == sessionId && sd.DrillId == drillId);
+            
+            if (sessionDrill == null)
+                return false;
+            
+            // SOFT DELETE: Mark as deleted instead of removing
+            sessionDrill.Deleted = true;
+            await context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        /// <summary>
+        /// SOFT DELETE: Marks song relationship as deleted but preserves data
+        /// </summary>
+        public async Task<bool> RemoveSongFromSessionAsync(int sessionId, int songId)
+        {
+            using var context = new PracticeDbContext();
+            
+            var sessionSong = await context.SessionSongs
+                .FirstOrDefaultAsync(ss => ss.SessionId == sessionId && ss.SongId == songId);
+            
+            if (sessionSong == null)
+                return false;
+            
+            // SOFT DELETE: Mark as deleted instead of removing
+            sessionSong.Deleted = true;
+            await context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        /// <summary>
+        /// AUDIT FUNCTION: Gets complete history including deleted relationships
+        /// </summary>
+        public async Task<IEnumerable<Session_Drill>> GetSessionDrillHistoryAsync(int sessionId)
+        {
+            using var context = new PracticeDbContext();
+            
+            return await context.SessionDrills
+                .IgnoreQueryFilters() // Include deleted records for audit
+                .Where(sd => sd.SessionId == sessionId)
+                .Include(sd => sd.Drill)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// ADMIN FUNCTION: Restore a soft-deleted drill relationship
+        /// </summary>
+        public async Task<bool> RestoreDrillToSessionAsync(int sessionId, int drillId)
+        {
+            using var context = new PracticeDbContext();
+            
+            var sessionDrill = await context.SessionDrills
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(sd => sd.SessionId == sessionId && sd.DrillId == drillId && sd.Deleted);
+            
+            if (sessionDrill == null)
+                return false;
+            
+            sessionDrill.Deleted = false;
+            await context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        /// <summary>
+        /// ADMIN FUNCTION: Restore a soft-deleted song relationship
+        /// </summary>
+        public async Task<bool> RestoreSongToSessionAsync(int sessionId, int songId)
+        {
+            using var context = new PracticeDbContext();
+            
+            var sessionSong = await context.SessionSongs
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(ss => ss.SessionId == sessionId && ss.SongId == songId && ss.Deleted);
+            
+            if (sessionSong == null)
+                return false;
+            
+            sessionSong.Deleted = false;
+            await context.SaveChangesAsync();
+            
+            return true;
         }
     }
 }
