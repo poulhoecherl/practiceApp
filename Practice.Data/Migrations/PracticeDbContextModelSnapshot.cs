@@ -108,6 +108,8 @@ namespace Practice.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Sessions");
                 });
 
@@ -284,6 +286,58 @@ namespace Practice.Data.Migrations
                     b.ToTable("Songs");
                 });
 
+            modelBuilder.Entity("Practice.Data.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Deleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RowCreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RowCreatedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RowModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RowModifiedOn")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Practice.Data.Models.Session", b =>
+                {
+                    b.HasOne("Practice.Data.Models.User", "User")
+                        .WithMany("Sessions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Practice.Data.Models.Session_Drill", b =>
                 {
                     b.HasOne("Practice.Data.Models.Drill", null)
@@ -368,6 +422,11 @@ namespace Practice.Data.Migrations
                     b.Navigation("Session");
 
                     b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("Practice.Data.Models.User", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 #pragma warning restore 612, 618
         }

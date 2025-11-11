@@ -1,4 +1,9 @@
+using Autofac.Core;
+using Practice.Services.Interfaces;
+using Practice.Services.Services;
 using Practice.Web.Components;
+using Microsoft.EntityFrameworkCore;
+using Practice.Data;
 
 namespace Practice.Web
 {
@@ -11,6 +16,15 @@ namespace Practice.Web
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+
+
+            builder.Services.AddScoped<Practice.Data.Interfaces.IUnitOfWork>();
+
+            builder.Services.AddTransient<ISessionService, SessionService>();
+
+            builder.Services.AddDbContextFactory<PracticeDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 

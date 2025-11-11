@@ -1,22 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Practice.Data.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Practice.Data
 {
     public class PracticeDbContext : DbContext
     {
+        public DbSet<User> Users { get; set; }
         public DbSet<Drill> Drills { get; set; }
-
         public DbSet<Song> Songs { get; set; }
-
         public DbSet<Session> Sessions { get; set; }
-
         public DbSet<Session_Drill> SessionDrills { get; set; }
         public DbSet<Session_Song> SessionSongs { get; set; }
 
@@ -34,11 +26,21 @@ namespace Practice.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configure global query filters for soft deletion - NEVER return deleted records
+            modelBuilder.Entity<User>().HasQueryFilter(u => !u.Deleted);
             modelBuilder.Entity<Session>().HasQueryFilter(s => !s.Deleted);
             modelBuilder.Entity<Drill>().HasQueryFilter(d => !d.Deleted);
             modelBuilder.Entity<Song>().HasQueryFilter(s => !s.Deleted);
             modelBuilder.Entity<Session_Drill>().HasQueryFilter(sd => !sd.Deleted);
             modelBuilder.Entity<Session_Song>().HasQueryFilter(ss => !ss.Deleted);
+
+            // Configure User-Session relationship (one-to-many)
+            modelBuilder.Entity<Session>(entity =>
+            {
+                entity.HasOne(s => s.User)
+                    .WithMany(u => u.Sessions)
+                    .HasForeignKey(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Restrict); // Prevent hard deletes
+            });
 
             // Configure Session-Drill many-to-many relationship
             modelBuilder.Entity<Session_Drill>(entity =>

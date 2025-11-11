@@ -9,29 +9,25 @@ namespace Practice.Services.Services
 {
     public class SessionService : ISessionService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        
         private readonly IMappingService _mappingService;
+        private readonly IDbContextFactory<PracticeDbContext> _dbContextFactory;
 
-        public SessionService(IUnitOfWork unitOfWork, IMappingService mappingService)
+        public SessionService(IMappingService mappingService, IDbContextFactory<PracticeDbContext> dbContextFactory)
         {
-            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _mappingService = mappingService ?? throw new ArgumentNullException(nameof(mappingService));
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         }
 
         // Session CRUD operations
         public async Task<SessionDto> GetSessionAsync(int id)
         {
-            var session = await _unitOfWork.Sessions.GetByIdAsync(id);
+            using var context = _dbContextFactory.CreateDbContext();
+            var session = await context.Sessions.FindAsync(id);
             if (session == null)
                 throw new KeyNotFoundException($"Session with id {id} not found");
 
             return _mappingService.MapToDto(session);
-        }
-
-        public async Task<IEnumerable<SessionDto>> GetAllSessionsAsync()
-        {
-            var sessions = await _unitOfWork.Sessions.GetAllAsync();
-            return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
         public async Task<SessionDto> CreateSessionAsync(SessionDto createSessionDto)
@@ -40,10 +36,14 @@ namespace Practice.Services.Services
                 throw new ArgumentNullException(nameof(createSessionDto));
 
             var session = _mappingService.MapToEntity(createSessionDto);
-            var createdSession = await _unitOfWork.Sessions.CreateAsync(session);
-            await _unitOfWork.SaveChangesAsync();
 
-            return _mappingService.MapToDto(createdSession);
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var createdSession = context.Sessions.Add(session);
+
+            await context.SaveChangesAsync();
+
+            return _mappingService.MapToDto(createdSession.Entity);
         }
 
         public async Task<SessionDto> UpdateSessionAsync(int id, SessionDto updateSessionDto)
@@ -51,14 +51,18 @@ namespace Practice.Services.Services
             if (updateSessionDto == null)
                 throw new ArgumentNullException(nameof(updateSessionDto));
 
-            var existingSession = await _unitOfWork.Sessions.GetByIdAsync(id);
+            using var context = _dbContextFactory.CreateDbContext();
+            var existingSession = await context.Sessions.FindAsync(id);
             if (existingSession == null)
                 throw new KeyNotFoundException($"Session with id {id} not found");
 
-            var updatedSession = await _unitOfWork.Sessions.UpdateAsync(existingSession);
-            await _unitOfWork.SaveChangesAsync();
+            // UPDATE the existing entity instead of creating a new one
+            _mappingService.MapToEntity(updateSessionDto, existingSession); // Map TO existing entity
 
-            return _mappingService.MapToDto(updatedSession);
+            // EF Core automatically tracks changes to existingSession
+            await context.SaveChangesAsync();
+
+            return _mappingService.MapToDto(existingSession);
         }
 
         /// <summary>
@@ -66,12 +70,17 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> DeleteSessionAsync(int id)
         {
-            var result = await _unitOfWork.Sessions.DeleteAsync(id); // This should trigger soft delete
-            if (result)
-            {
-                await _unitOfWork.SaveChangesAsync();
-            }
-            return result;
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var session = await context.Sessions.FindAsync(id);
+            if (session == null)
+                return false;
+
+            // SOFT DELETE: Mark as deleted instead of removing
+            session.Deleted = true;
+            await context.SaveChangesAsync();
+
+            return true;
         }
 
         // Session-specific operations
@@ -83,9 +92,12 @@ namespace Practice.Services.Services
         public async Task<SessionDto> CreateNewSessionAsync()
         {
             var now = DateTime.UtcNow;
-            
+
             // Check if there's already an active session
-            var currentSession = await _unitOfWork.Sessions.GetCurrentSessionAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+            var currentSession = await context.Sessions
+                .Where(s => s.EndTime == null) // Assuming active sessions have no end time
+                .FirstOrDefaultAsync();
             if (currentSession != null)
             {
                 throw new InvalidOperationException("Cannot create a new session while another session is active. Please end the current session first.");
@@ -127,11 +139,12 @@ namespace Practice.Services.Services
                 
             };
 
-            var createdSession = await _unitOfWork.Sessions.CreateAsync(session);
-            await _unitOfWork.SaveChangesAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+            var createdSession = await context.Sessions.AddAsync(session);
+            await context.SaveChangesAsync();
 
             // Map to DTO using MappingService
-            return _mappingService.MapToDto(createdSession);
+            return _mappingService.MapToDto(createdSession.Entity);
         }
 
         /// <summary>
@@ -140,61 +153,106 @@ namespace Practice.Services.Services
         /// <returns>The updated session DTO</returns>
         public async Task<SessionDto> EndCurrentSessionAsync()
         {
-            var currentSession = await _unitOfWork.Sessions.GetCurrentSessionAsync();
-            if (currentSession == null)
+            using var context = _dbContextFactory.CreateDbContext();
+            var currentSession = await context.Sessions
+                .Where(s => s.EndTime == null) // Assuming active sessions have no end time
+                .FirstOrDefaultAsync();
+            if (currentSession != null)
             {
-                throw new InvalidOperationException("No active session found to end.");
+                throw new InvalidOperationException("Cannot end a session while another session is active. Please end the current session first.");
             }
 
             // Update the end time to now
-            
-            var updatedSession = await _unitOfWork.Sessions.UpdateAsync(currentSession);
-            await _unitOfWork.SaveChangesAsync();
+            currentSession.EndTime = DateTime.UtcNow;
 
-            return _mappingService.MapToDto(updatedSession);
+            context.Sessions.Update(currentSession);
+            await context.SaveChangesAsync();
+
+            return _mappingService.MapToDto(currentSession);
         }
 
         public async Task<SessionDto?> GetCurrentSessionAsync()
         {
-            var currentSession = await _unitOfWork.Sessions.GetCurrentSessionAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+            var currentSession = await context.Sessions
+                .Where(s => s.EndTime == null) // Assuming active sessions have no end time
+                .FirstOrDefaultAsync();
+            if (currentSession != null)
+            {
+                throw new InvalidOperationException("Cannot end a session while another session is active. Please end the current session first.");
+            }
+
             return currentSession != null ? _mappingService.MapToDto(currentSession) : null;
         }
 
         public async Task<SessionDto?> GetLatestSessionAsync()
         {
-            var latestSession = await _unitOfWork.Sessions.GetLatestSessionAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+            var latestSession = await context.Sessions
+                .OrderByDescending(s => s.StartTime)
+                .FirstOrDefaultAsync();
             return latestSession != null ? _mappingService.MapToDto(latestSession) : null;
         }
 
         // Session query operations
         public async Task<IEnumerable<SessionDto>> GetSessionsByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            var sessions = await _unitOfWork.Sessions.GetSessionsByDateRangeAsync(startDate, endDate);
+            using var context = _dbContextFactory.CreateDbContext();
+            var sessions = await context.Sessions
+                .Where(s => s.StartTime >= startDate && s.EndTime <= endDate)
+                .ToListAsync();
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
         public async Task<IEnumerable<SessionDto>> GetActiveSessionsAsync()
         {
-            var sessions = await _unitOfWork.Sessions.GetActiveSessionsAsync();
-            return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
+            int userId = 1;
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var userSessions = await context.Sessions
+                .Where(s => s.UserId == userId)
+                .Include(s => s.User)
+                .ToListAsync();
+
+            return _mappingService.MapToDto(userSessions, _mappingService.MapToDto);
+        }
+
+        public async Task<IEnumerable<SessionDto>> GetAllSessionsAsync()
+        {
+            int userId = 1;
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var userSessions = await context.Sessions
+                .Where(s => s.UserId == userId)
+                .Include(s => s.User)
+                .ToListAsync();
+
+            return _mappingService.MapToDto(userSessions, _mappingService.MapToDto);
         }
 
         public async Task<IEnumerable<SessionDto>> GetCompletedSessionsAsync()
         {
-            var sessions = await _unitOfWork.Sessions.GetCompletedSessionsAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+            var sessions = await context.Sessions
+                .Where(s => s.EndTime != null)
+                .ToListAsync();
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
         public async Task<IEnumerable<SessionDto>> GetSessionsForTodayAsync()
         {
-            var sessions = await _unitOfWork.Sessions.GetSessionsForTodayAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+            var sessions = await context.Sessions
+                .Where(s => s.StartTime.Value == DateTime.UtcNow.Date)
+                .ToListAsync();
             return _mappingService.MapToDto(sessions, _mappingService.MapToDto);
         }
 
         // Session summary and statistics
         public async Task<SessionDto> GetSessionSummaryAsync(int id)
         {
-            var session = await _unitOfWork.Sessions.GetByIdAsync(id);
+            using var context = _dbContextFactory.CreateDbContext();
+            var session = await context.Sessions.FindAsync(id);
             if (session == null)
                 throw new KeyNotFoundException($"Session with id {id} not found");
 
@@ -203,22 +261,44 @@ namespace Practice.Services.Services
 
         public async Task<TimeSpan> GetTotalSessionDurationAsync()
         {
-            return await _unitOfWork.Sessions.GetTotalSessionDurationAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var sessions = await context.Sessions
+                .Where(s => s.StartTime.HasValue && s.EndTime.HasValue)
+                .ToListAsync();
+
+            var totalTicks = sessions.Sum(s => (s.EndTime!.Value - s.StartTime!.Value).Ticks);
+
+            return new TimeSpan(totalTicks);
         }
 
         public async Task<TimeSpan> GetSessionDurationAsync(int sessionId)
         {
-            return await _unitOfWork.Sessions.GetSessionDurationAsync(sessionId);
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var session = await context.Sessions
+                .Where(s => s.Id == sessionId)
+                .SingleOrDefaultAsync();
+
+            return new TimeSpan(session.DurationMinutes);
         }
 
         public async Task<bool> SessionExistsAsync(int id)
         {
-            return await _unitOfWork.Sessions.ExistsAsync(id);
+            var activeSession = await GetCurrentSessionAsync();
+            if (activeSession != null)
+            {
+                throw new InvalidOperationException($"Session {activeSession.Id} is already active. End it before starting a new one.");
+            }
+
+            return activeSession != null;
         }
 
         public async Task<int> GetSessionCountAsync()
         {
-            return await _unitOfWork.Sessions.CountAsync();
+            using var context = _dbContextFactory.CreateDbContext();
+
+            return await context.Sessions.CountAsync();
         }
 
         /// <summary>
@@ -226,16 +306,16 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> AddDrillToSessionAsync(int sessionId, int drillId, string? notes = null, int? rating = null)
         {
-            var session = await _unitOfWork.Sessions.GetByIdAsync(sessionId);
+            using var context = _dbContextFactory.CreateDbContext();
+
+            var session = await context.Sessions.FindAsync(sessionId);
             if (session == null || session.Deleted)
                 throw new KeyNotFoundException($"Active session with id {sessionId} not found");
 
-            var drill = await _unitOfWork.Drills.GetByIdAsync(drillId);
+            var drill = await context.Drills.FindAsync(drillId);
             if (drill == null || drill.Deleted)
                 throw new KeyNotFoundException($"Active drill with id {drillId} not found");
 
-            using var context = new PracticeDbContext();
-            
             var existingRelation = await context.SessionDrills
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(sd => sd.SessionId == sessionId && sd.DrillId == drillId);
@@ -275,7 +355,7 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> AddSongToSessionAsync(int sessionId, int songId, string? notes = null)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var existingRelation = await context.SessionSongs
                 .IgnoreQueryFilters()
@@ -311,7 +391,7 @@ namespace Practice.Services.Services
 
         public async Task<IEnumerable<Drill>> GetSessionDrillsAsync(int sessionId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var drills = await context.SessionDrills
                 .Where(sd => sd.SessionId == sessionId) // Query filter automatically excludes deleted
@@ -324,7 +404,7 @@ namespace Practice.Services.Services
 
         public async Task<IEnumerable<Song>> GetSessionSongsAsync(int sessionId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var songs = await context.SessionSongs
                 .Where(ss => ss.SessionId == sessionId) // Query filter automatically excludes deleted
@@ -340,7 +420,7 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> RemoveDrillFromSessionAsync(int sessionId, int drillId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var sessionDrill = await context.SessionDrills
                 .FirstOrDefaultAsync(sd => sd.SessionId == sessionId && sd.DrillId == drillId);
@@ -360,7 +440,7 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> RemoveSongFromSessionAsync(int sessionId, int songId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var sessionSong = await context.SessionSongs
                 .FirstOrDefaultAsync(ss => ss.SessionId == sessionId && ss.SongId == songId);
@@ -380,7 +460,7 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<IEnumerable<Session_Drill>> GetSessionDrillHistoryAsync(int sessionId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             return await context.SessionDrills
                 .IgnoreQueryFilters() // Include deleted records for audit
@@ -394,7 +474,7 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> RestoreDrillToSessionAsync(int sessionId, int drillId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var sessionDrill = await context.SessionDrills
                 .IgnoreQueryFilters()
@@ -414,7 +494,7 @@ namespace Practice.Services.Services
         /// </summary>
         public async Task<bool> RestoreSongToSessionAsync(int sessionId, int songId)
         {
-            using var context = new PracticeDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             
             var sessionSong = await context.SessionSongs
                 .IgnoreQueryFilters()

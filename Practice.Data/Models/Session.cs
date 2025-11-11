@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,11 +12,15 @@ namespace Practice.Data.Models
         public int Id { get; set; }
 
         [Required]
-        public int UserId { get; set; } = 1;
+        public int UserId { get; set; }
+
+        // Navigation property - each session belongs to exactly one user
+        [ForeignKey(nameof(UserId))]
+        public virtual User User { get; set; } = null!;
 
         [Required]
         public DateTime PracticeDate { get; set; }
-        
+
         [Required]
         public DateTime? StartTime { get; set; }
 
